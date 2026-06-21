@@ -89,6 +89,13 @@ export function ExpenseSplitter() {
     }));
 
     setSplitResults(results);
+    pendo.track("expense_split_calculated", {
+      expenseName: expenseName,
+      totalAmount: total,
+      currency: currency,
+      participantCount: participants.length,
+      perPersonAmountXLM: parseFloat(perPersonXLM.toFixed(7)),
+    });
   };
 
   const handleSendPayment = (result: SplitResult) => {
