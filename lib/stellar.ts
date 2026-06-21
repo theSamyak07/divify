@@ -5,6 +5,46 @@
 export const STELLAR_NETWORK = "TESTNET";
 export const STELLAR_HORIZON_URL = "https://horizon-testnet.stellar.org";
 export const STELLAR_NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
+export const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
+
+// --- Level 2: Explicit wallet error types ---
+export enum WalletErrorType {
+  NOT_FOUND = "WALLET_NOT_FOUND",
+  REJECTED = "WALLET_REJECTED",
+  INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE",
+  UNKNOWN = "UNKNOWN_ERROR",
+}
+
+export interface WalletError {
+  type: WalletErrorType;
+  message: string;
+}
+
+export function classifyWalletError(raw: string): WalletError {
+  const msg = raw.toLowerCase();
+  if (msg.includes("not found") || msg.includes("not installed") || msg.includes("extension")) {
+    return { type: WalletErrorType.NOT_FOUND, message: raw };
+  }
+  if (
+    msg.includes("reject") ||
+    msg.includes("denied") ||
+    msg.includes("cancel") ||
+    msg.includes("user declined")
+  ) {
+    return { type: WalletErrorType.REJECTED, message: raw };
+  }
+  if (
+    msg.includes("insufficient") ||
+    msg.includes("balance") ||
+    msg.includes("underfunded")
+  ) {
+    return { type: WalletErrorType.INSUFFICIENT_BALANCE, message: raw };
+  }
+  return { type: WalletErrorType.UNKNOWN, message: raw };
+}
+
+// --- Level 2: Transaction status tracking ---
+export type TxStatus = "idle" | "pending" | "signing" | "submitting" | "success" | "error";
 
 export function shortenAddress(address: string, chars = 6): string {
   if (!address) return "";

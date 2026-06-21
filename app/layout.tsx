@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "sonner";
 import { WalletProvider } from "@/lib/wallet-context";
 import "./globals.css";
 
@@ -22,6 +23,16 @@ export default function RootLayout({
     <html lang="en" className="bg-background">
       <body className={`${spaceGrotesk.className} antialiased`}>
         <WalletProvider>{children}</WalletProvider>
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            style: {
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            },
+          }}
+        />
         <Analytics />
       </body>
     </html>

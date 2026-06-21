@@ -8,16 +8,19 @@ import React, {
   useCallback,
 } from "react";
 import {
-  isConnected as freighterIsConnected,
-  requestAccess,
-  getAddress,
-  signTransaction,
-} from "@stellar/freighter-api";
+  StellarWalletsKit,
+  initWalletKit,
+  isKitReady,
+} from "./wallet-kit";
 import {
   getXLMBalance,
-  StellarBalance,
-  TransactionResult,
+  classifyWalletError,
+  WalletErrorType,
   STELLAR_NETWORK_PASSPHRASE,
+  type StellarBalance,
+  type TransactionResult,
+  type TxStatus,
+  type WalletError,
 } from "./stellar";
 import {
   fetchAccountBalancesAction,
@@ -25,14 +28,25 @@ import {
   submitSignedTransactionAction,
 } from "./stellar-actions";
 
+// Wallet IDs from StellarWalletsKit
+export const WALLET_IDS = {
+  FREIGHTER: "freighter",
+  XBULL: "xbull",
+  ALBEDO: "albedo",
+} as const;
+
+export type WalletId = (typeof WALLET_IDS)[keyof typeof WALLET_IDS];
+
 interface WalletContextType {
   isConnected: boolean;
   publicKey: string | null;
   balances: StellarBalance[];
   xlmBalance: string;
   isLoading: boolean;
-  error: string | null;
-  connectWallet: () => Promise<void>;
+  walletError: WalletError | null;
+  activeWalletId: WalletId | null;
+  txStatus: TxStatus;
+  connectWallet: (walletId?: WalletId) => Promise<void>;
   disconnectWallet: () => void;
   refreshBalance: () => Promise<void>;
   sendXLM: (
@@ -40,9 +54,12 @@ interface WalletContextType {
     amount: string,
     memo?: string
   ) => Promise<TransactionResult>;
+  clearError: () => void;
 }
 
 const WalletContext = createContext<WalletContextType | null>(null);
+
+const STORAGE_KEY = "divify_wallet_v2";
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [connected, setConnected] = useState(false);
@@ -50,7 +67,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [balances, setBalances] = useState<StellarBalance[]>([]);
   const [xlmBalance, setXlmBalance] = useState("0");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [walletError, setWalletError] = useState<WalletError | null>(null);
+  const [activeWalletId, setActiveWalletId] = useState<WalletId | null>(null);
+  const [txStatus, setTxStatus] = useState<TxStatus>("idle");
 
   const loadBalances = useCallback(async (pk: string) => {
     const b = await fetchAccountBalancesAction(pk);
@@ -58,65 +77,93 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setXlmBalance(getXLMBalance(b));
   }, []);
 
-  // Auto-reconnect on page load if the user already authorized this app
+  // Auto-reconnect on page load using persisted wallet ID
   useEffect(() => {
     async function tryAutoReconnect() {
-      const stored = localStorage.getItem("divify_wallet");
+      const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) return;
       try {
-        const { isConnected: installed } = await freighterIsConnected();
-        if (!installed) return;
-        // getAddress() is silent — no popup — only succeeds if already authorized
-        const { address, error: addrErr } = await getAddress();
-        if (addrErr || !address) return;
+        const { walletId, address } = JSON.parse(stored) as {
+          walletId: WalletId;
+          address: string;
+        };
+        await initWalletKit();
+        if (!isKitReady()) return;
+        StellarWalletsKit.setWallet(walletId);
         setPublicKey(address);
         setConnected(true);
+        setActiveWalletId(walletId);
         await loadBalances(address);
       } catch {
-        localStorage.removeItem("divify_wallet");
+        localStorage.removeItem(STORAGE_KEY);
       }
     }
     tryAutoReconnect();
   }, [loadBalances]);
 
-  const connectWallet = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { isConnected: installed } = await freighterIsConnected();
-      if (!installed) {
-        throw new Error(
-          "Freighter wallet not found. Install the Freighter extension for Firefox or Chrome and try again."
+  const connectWallet = useCallback(
+    async (walletId: WalletId = WALLET_IDS.FREIGHTER) => {
+      setIsLoading(true);
+      setWalletError(null);
+      try {
+        // Level 2: ensure kit is initialised before connecting
+        await initWalletKit();
+
+        if (!isKitReady()) {
+          // Kit failed to init — most likely the wallet extension is not installed
+          throw new Error(
+            `${walletId} wallet extension not found. Please install it and try again.`
+          );
+        }
+
+        StellarWalletsKit.setWallet(walletId);
+
+        // Level 2 error type: WALLET_NOT_FOUND if module not available
+        let address: string;
+        try {
+          const result = await StellarWalletsKit.fetchAddress();
+          address = result.address;
+        } catch (innerErr: unknown) {
+          const msg =
+            innerErr instanceof Error
+              ? innerErr.message
+              : "Wallet connection failed.";
+          throw new Error(msg);
+        }
+
+        if (!address) {
+          throw new Error("Wallet did not return a public key.");
+        }
+
+        setPublicKey(address);
+        setConnected(true);
+        setActiveWalletId(walletId);
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ walletId, address })
         );
+        await loadBalances(address);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "Wallet connection failed.";
+        // Level 2: classify into one of the 3 error types
+        setWalletError(classifyWalletError(message));
+      } finally {
+        setIsLoading(false);
       }
-      // requestAccess() triggers the Freighter popup and returns the public key
-      const { address, error: accessErr } = await requestAccess();
-      if (accessErr) {
-        throw new Error(accessErr.message || "Access was denied by Freighter.");
-      }
-      if (!address) {
-        throw new Error("Freighter did not return a public key.");
-      }
-      setPublicKey(address);
-      setConnected(true);
-      localStorage.setItem("divify_wallet", address);
-      await loadBalances(address);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "Wallet connection failed.";
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [loadBalances]);
+    },
+    [loadBalances]
+  );
 
   const disconnectWallet = useCallback(() => {
     setPublicKey(null);
     setConnected(false);
     setBalances([]);
     setXlmBalance("0");
-    setError(null);
-    localStorage.removeItem("divify_wallet");
+    setWalletError(null);
+    setActiveWalletId(null);
+    setTxStatus("idle");
+    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const refreshBalance = useCallback(async () => {
@@ -130,8 +177,24 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       amount: string,
       memo?: string
     ): Promise<TransactionResult> => {
-      if (!publicKey) return { success: false, error: "Wallet not connected." };
+      if (!publicKey)
+        return { success: false, error: "Wallet not connected." };
+
+      // Level 2: explicit insufficient balance check
+      const balance = parseFloat(xlmBalance);
+      const needed = parseFloat(amount);
+      if (needed > balance) {
+        const err = classifyWalletError("Insufficient balance");
+        setWalletError(err);
+        return {
+          success: false,
+          error: `Insufficient balance: you have ${balance.toFixed(2)} XLM but need ${needed.toFixed(2)} XLM.`,
+        };
+      }
+
       try {
+        setTxStatus("pending");
+
         // Step 1: build the unsigned transaction on the server
         const { xdr, error: buildErr } = await buildUnsignedTransactionAction(
           publicKey,
@@ -140,34 +203,67 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           memo
         );
         if (buildErr || !xdr) {
-          return { success: false, error: buildErr ?? "Failed to build transaction." };
+          setTxStatus("error");
+          return {
+            success: false,
+            error: buildErr ?? "Failed to build transaction.",
+          };
         }
 
-        // Step 2: sign it in the browser with Freighter (client-side only)
-        const { signedTxXdr, error: signErr } = await signTransaction(xdr, {
-          networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
-          address: publicKey,
-        });
-        if (signErr) {
-          throw new Error(signErr.message || "Transaction signing failed.");
+        setTxStatus("signing");
+
+        // Step 2: sign in the browser via StellarWalletsKit (supports all wallets)
+        let signedTxXdr: string;
+        try {
+          const sigResult = await StellarWalletsKit.signTransaction(xdr, {
+            networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
+            address: publicKey,
+          });
+          signedTxXdr = sigResult.signedTxXdr;
+        } catch (signErr: unknown) {
+          const msg =
+            signErr instanceof Error ? signErr.message : "Signing failed.";
+          // Level 2: classify as rejected if user cancelled
+          const classified = classifyWalletError(msg);
+          if (classified.type === WalletErrorType.REJECTED) {
+            setTxStatus("idle");
+            return { success: false, error: "Transaction cancelled by user." };
+          }
+          throw signErr;
         }
+
         if (!signedTxXdr) {
-          throw new Error("Transaction signing cancelled.");
+          setTxStatus("error");
+          return { success: false, error: "Transaction signing cancelled." };
         }
 
-        // Step 3: submit the signed XDR on the server
+        setTxStatus("submitting");
+
+        // Step 3: submit via server action
         const result = await submitSignedTransactionAction(signedTxXdr);
         if (result.success) {
+          setTxStatus("success");
           await loadBalances(publicKey);
+          // Reset to idle after a delay
+          setTimeout(() => setTxStatus("idle"), 4000);
+        } else {
+          setTxStatus("error");
+          const classified = classifyWalletError(result.error ?? "");
+          if (classified.type === WalletErrorType.INSUFFICIENT_BALANCE) {
+            setWalletError(classified);
+          }
+          setTimeout(() => setTxStatus("idle"), 4000);
         }
         return result;
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Transaction failed.";
+        setTxStatus("error");
+        setTimeout(() => setTxStatus("idle"), 4000);
         return { success: false, error: message };
       }
     },
-    [publicKey, loadBalances]
+    [publicKey, xlmBalance, loadBalances]
   );
 
   return (
@@ -178,11 +274,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         balances,
         xlmBalance,
         isLoading,
-        error,
+        walletError,
+        activeWalletId,
+        txStatus,
         connectWallet,
         disconnectWallet,
         refreshBalance,
         sendXLM,
+        clearError: () => setWalletError(null),
       }}
     >
       {children}
