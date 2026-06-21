@@ -1,7 +1,7 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
-import { shortenAddress, formatXLM } from "@/lib/stellar";
+import { shortenAddress, formatXLM, fundWithFriendbot } from "@/lib/stellar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import {
   ArrowUpRight,
   RefreshCw,
   Loader2,
+  Droplets,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -32,6 +33,8 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
 
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [funding, setFunding] = useState(false);
+  const [fundMsg, setFundMsg] = useState<string | null>(null);
 
   const handleCopy = () => {
     if (!publicKey) return;
@@ -44,6 +47,21 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
     setRefreshing(true);
     await refreshBalance();
     setRefreshing(false);
+  };
+
+  const handleFaucet = async () => {
+    if (!publicKey) return;
+    setFunding(true);
+    setFundMsg(null);
+    const result = await fundWithFriendbot(publicKey);
+    if (result.success) {
+      setFundMsg("10,000 XLM added! Refreshing balance...");
+      await refreshBalance();
+    } else {
+      setFundMsg(result.error ?? "Faucet request failed.");
+    }
+    setFunding(false);
+    setTimeout(() => setFundMsg(null), 5000);
   };
 
   if (!isConnected) {
@@ -189,6 +207,39 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
               </div>
             ))}
           </div>
+        )}
+
+        {/* Faucet */}
+        {parseFloat(xlmBalance) < 10 && (
+          <div className="mb-4 rounded-lg border border-stellar-amber/30 bg-stellar-amber/5 px-3 py-2.5 flex items-start gap-2">
+            <Droplets className="h-4 w-4 text-stellar-amber shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground">Low balance</p>
+              <p className="text-[11px] text-muted-foreground">
+                Fund your testnet wallet for free with Friendbot.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleFaucet}
+              disabled={funding}
+              className="shrink-0 h-7 text-xs border-stellar-amber/40 text-stellar-amber hover:bg-stellar-amber/10 gap-1.5"
+            >
+              {funding ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Droplets className="h-3 w-3" />
+              )}
+              {funding ? "Funding..." : "Fund"}
+            </Button>
+          </div>
+        )}
+
+        {fundMsg && (
+          <p className={`text-xs mb-3 ${fundMsg.includes("XLM added") ? "text-stellar-green" : "text-destructive"}`}>
+            {fundMsg}
+          </p>
         )}
 
         {/* Actions */}

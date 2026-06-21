@@ -15,34 +15,39 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface TxRecord {
+interface PaymentRecord {
   id: string;
-  hash: string;
+  type: string;
+  transaction_hash: string;
   created_at: string;
-  source_account: string;
-  fee_charged: string;
-  operation_count: number;
-  successful: boolean;
+  from: string;
+  to: string;
+  amount: string;
+  asset_type: string;
+  asset_code?: string;
+  transaction_successful: boolean;
 }
 
 export function ActivityFeed() {
   const { isConnected, publicKey } = useWallet();
-  const [transactions, setTransactions] = useState<TxRecord[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchPayments = async () => {
     if (!publicKey) return;
     setLoading(true);
     try {
       const result = await horizonServer
-        .transactions()
+        .payments()
         .forAccount(publicKey)
         .order("desc")
-        .limit(8)
+        .limit(10)
         .call();
-      setTransactions(result.records as unknown as TxRecord[]);
+      const records = result.records as unknown as PaymentRecord[];
+      // Only show payment and create_account operations
+      setPayments(records.filter((r) => r.type === "payment" || r.type === "create_account"));
     } catch {
-      setTransactions([]);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -50,7 +55,7 @@ export function ActivityFeed() {
 
   useEffect(() => {
     if (isConnected && publicKey) {
-      fetchTransactions();
+      fetchPayments();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, publicKey]);
@@ -94,7 +99,7 @@ export function ActivityFeed() {
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          onClick={fetchTransactions}
+          onClick={fetchPayments}
           disabled={loading}
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -114,23 +119,26 @@ export function ActivityFeed() {
               </div>
             ))}
           </div>
-        ) : transactions.length === 0 ? (
+        ) : payments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <Clock className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              No transactions found.
-            </p>
+            <p className="text-sm text-muted-foreground">No transactions found.</p>
             <p className="text-xs text-muted-foreground">
               Your testnet transactions will appear here.
             </p>
           </div>
         ) : (
           <div className="flex flex-col gap-1">
-            {transactions.map((tx) => {
-              const isOutgoing = tx.source_account === publicKey;
+            {payments.map((op) => {
+              const isOutgoing = op.from === publicKey;
+              const counterparty = isOutgoing ? op.to : op.from;
+              const assetLabel =
+                op.asset_type === "native" ? "XLM" : (op.asset_code ?? "?");
+              const amount = op.amount ? parseFloat(op.amount).toFixed(4) : null;
+
               return (
                 <div
-                  key={tx.id}
+                  key={op.id}
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50 transition-colors group"
                 >
                   <div
@@ -151,29 +159,35 @@ export function ActivityFeed() {
                       <p className="text-xs font-medium text-foreground">
                         {isOutgoing ? "Sent" : "Received"}
                       </p>
+                      {amount && (
+                        <span className={`text-xs font-semibold ${isOutgoing ? "text-destructive" : "text-stellar-green"}`}>
+                          {isOutgoing ? "-" : "+"}{amount} {assetLabel}
+                        </span>
+                      )}
                       <Badge
                         variant="outline"
                         className={`text-[9px] px-1 py-0 h-3.5 ${
-                          tx.successful
+                          op.transaction_successful
                             ? "border-stellar-green/30 text-stellar-green"
                             : "border-destructive/30 text-destructive"
                         }`}
                       >
-                        {tx.successful ? "Success" : "Failed"}
+                        {op.transaction_successful ? "Success" : "Failed"}
                       </Badge>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate font-mono">
-                      {isOutgoing
-                        ? "To: " + shortenAddress(tx.source_account)
-                        : "From: " + shortenAddress(tx.source_account)}
-                    </p>
+                    {counterparty && (
+                      <p className="text-[10px] text-muted-foreground truncate font-mono">
+                        {isOutgoing ? "To: " : "From: "}
+                        {shortenAddress(counterparty)}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[10px] text-muted-foreground">
-                      {formatDate(tx.created_at)}
+                      {formatDate(op.created_at)}
                     </p>
                     <a
-                      href={`https://stellar.expert/explorer/testnet/tx/${tx.hash}`}
+                      href={`https://stellar.expert/explorer/testnet/tx/${op.transaction_hash}`}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex items-center gap-0.5 text-[10px] text-stellar-teal opacity-0 group-hover:opacity-100 transition-opacity"
