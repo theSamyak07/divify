@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useWallet } from "@/lib/wallet-context";
 import {
   Dialog,
@@ -80,13 +81,32 @@ export function SendPaymentModal({
     if (!destination || !amount) return;
     setStatus("sending");
     setErrorMsg(null);
+    const toastId = toast.loading("Sending transaction...", {
+      description: `${parseFloat(amount).toFixed(4)} XLM to ${destination.slice(0, 8)}...`,
+    });
     const result = await sendXLM(destination, amount, memo || undefined);
     if (result.success && result.hash) {
       setTxHash(result.hash);
       setStatus("success");
+      toast.success("Transaction confirmed!", {
+        id: toastId,
+        description: `${parseFloat(amount).toFixed(4)} XLM sent on Testnet.`,
+        action: {
+          label: "View",
+          onClick: () =>
+            window.open(
+              `https://stellar.expert/explorer/testnet/tx/${result.hash}`,
+              "_blank"
+            ),
+        },
+      });
     } else {
       setErrorMsg(result.error ?? "Transaction failed.");
       setStatus("error");
+      toast.error("Transaction failed", {
+        id: toastId,
+        description: result.error ?? "Check your balance and try again.",
+      });
     }
   };
 

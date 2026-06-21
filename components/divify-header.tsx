@@ -1,7 +1,8 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
-import { shortenAddress, fundWithFriendbot } from "@/lib/stellar";
+import { shortenAddress } from "@/lib/stellar";
+import { fundWithFriendbotAction } from "@/lib/stellar-actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,22 +19,25 @@ import {
   LogOut,
   RefreshCw,
   Loader2,
-  AlertCircle,
   Droplets,
   ExternalLink,
+  Menu,
 } from "lucide-react";
 import { useState } from "react";
 
-export function DivifyHeader() {
+interface DivifyHeaderProps {
+  onConnectClick?: () => void;
+}
+
+export function DivifyHeader({ onConnectClick }: DivifyHeaderProps = {}) {
   const {
     isConnected,
     publicKey,
     xlmBalance,
     isLoading,
-    error,
-    connectWallet,
     disconnectWallet,
     refreshBalance,
+    activeWalletId,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -56,32 +60,40 @@ export function DivifyHeader() {
   const handleFaucet = async () => {
     if (!publicKey) return;
     setFunding(true);
-    await fundWithFriendbot(publicKey);
+    await fundWithFriendbotAction(publicKey);
     await refreshBalance();
     setFunding(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-6 py-4">
+    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-md px-4 sm:px-6 py-3 sm:py-4">
       {/* Logo */}
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-stellar-teal text-primary-foreground font-bold text-base">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-stellar-teal text-primary-foreground font-bold text-sm sm:text-base">
           D
         </div>
-        <div>
-          <span className="font-bold text-foreground text-lg tracking-tight">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-foreground text-base sm:text-lg tracking-tight">
             Divify
           </span>
           <Badge
             variant="outline"
-            className="ml-2 text-[10px] border-stellar-teal/40 text-stellar-teal px-1.5 py-0"
+            className="text-[10px] border-stellar-teal/40 text-stellar-teal px-1.5 py-0"
           >
             Testnet
           </Badge>
+          {activeWalletId && (
+            <Badge
+              variant="outline"
+              className="hidden sm:inline-flex text-[10px] border-muted text-muted-foreground px-1.5 py-0 capitalize"
+            >
+              {activeWalletId}
+            </Badge>
+          )}
         </div>
       </div>
 
-      {/* Nav */}
+      {/* Nav — hidden on mobile */}
       <nav className="hidden md:flex items-center gap-1">
         {["Dashboard", "Groups", "History"].map((item) => (
           <button
@@ -93,43 +105,41 @@ export function DivifyHeader() {
         ))}
       </nav>
 
-      {/* Wallet */}
-      <div className="flex items-center gap-3">
-        {error && (
-          <div className="flex items-center gap-1.5 text-destructive text-xs max-w-[200px]">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{error}</span>
-          </div>
-        )}
-
+      {/* Wallet controls */}
+      <div className="flex items-center gap-2">
         {!isConnected ? (
           <Button
-            onClick={connectWallet}
+            onClick={onConnectClick}
             disabled={isLoading}
-            className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2 font-medium"
+            className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2 font-medium text-sm"
           >
             {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Wallet className="h-4 w-4" />
             )}
-            {isLoading ? "Connecting..." : "Connect Wallet"}
+            <span className="hidden sm:inline">
+              {isLoading ? "Connecting..." : "Connect Wallet"}
+            </span>
+            <span className="sm:hidden">
+              {isLoading ? "..." : "Connect"}
+            </span>
           </Button>
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="border-stellar-teal/30 bg-stellar-teal/5 hover:bg-stellar-teal/10 gap-2 font-mono text-sm"
+                className="border-stellar-teal/30 bg-stellar-teal/5 hover:bg-stellar-teal/10 gap-1.5 sm:gap-2 font-mono text-xs sm:text-sm px-2 sm:px-3"
               >
-                <div className="h-2 w-2 rounded-full bg-stellar-green animate-pulse" />
+                <div className="h-2 w-2 rounded-full bg-stellar-green animate-pulse shrink-0" />
                 <span className="hidden sm:inline text-foreground">
                   {shortenAddress(publicKey!)}
                 </span>
                 <span className="text-stellar-teal font-semibold font-sans">
                   {parseFloat(xlmBalance).toFixed(2)} XLM
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -138,7 +148,7 @@ export function DivifyHeader() {
             >
               <div className="px-3 py-2.5">
                 <p className="text-xs text-muted-foreground mb-0.5">
-                  Connected Wallet
+                  Connected via {activeWalletId ?? "wallet"}
                 </p>
                 <p className="font-mono text-xs text-foreground break-all">
                   {publicKey}
@@ -155,7 +165,10 @@ export function DivifyHeader() {
                 </p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleCopy} className="gap-2 cursor-pointer">
+              <DropdownMenuItem
+                onClick={handleCopy}
+                className="gap-2 cursor-pointer"
+              >
                 <Copy className="h-4 w-4" />
                 {copied ? "Copied!" : "Copy Address"}
               </DropdownMenuItem>
@@ -202,6 +215,16 @@ export function DivifyHeader() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+
+        {/* Mobile menu icon (visual only for now) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden h-9 w-9 text-muted-foreground"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );

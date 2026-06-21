@@ -1,7 +1,8 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
-import { shortenAddress, formatXLM, fundWithFriendbot } from "@/lib/stellar";
+import { shortenAddress, formatXLM } from "@/lib/stellar";
+import { fundWithFriendbotAction } from "@/lib/stellar-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
     if (!publicKey) return;
     setFunding(true);
     setFundMsg(null);
-    const result = await fundWithFriendbot(publicKey);
+    const result = await fundWithFriendbotAction(publicKey);
     if (result.success) {
       setFundMsg("10,000 XLM added! Refreshing balance...");
       await refreshBalance();
