@@ -1,44 +1,29 @@
-import type { Metadata } from 'next'
-import { Space_Grotesk } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata } from "next";
+import { Space_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { WalletProvider } from "@/lib/wallet-context";
+import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
-}
+  title: "Divify — Multi-Currency Expense Splitter on Stellar",
+  description:
+    "Split group expenses and send XLM payments instantly on the Stellar network. A non-custodial dApp built for Stellar Journey to Mastery.",
+  generator: "v0.app",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="bg-background">
       <body className={`${spaceGrotesk.className} antialiased`}>
-        {children}
+        <WalletProvider>{children}</WalletProvider>
         <Analytics />
       </body>
     </html>
-  )
+  );
 }
