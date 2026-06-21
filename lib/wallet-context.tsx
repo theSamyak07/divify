@@ -77,6 +77,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setXlmBalance(getXLMBalance(b));
   }, []);
 
+  // Boot Pendo SDK once with an anonymous visitor
+  useEffect(() => {
+    pendo.initialize({ visitor: { id: '' } });
+  }, []);
+
   // Auto-reconnect on page load using persisted wallet ID
   useEffect(() => {
     async function tryAutoReconnect() {
@@ -94,6 +99,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setConnected(true);
         setActiveWalletId(walletId);
         await loadBalances(address);
+        pendo.identify({
+          visitor: {
+            id: address,
+            activeWalletId: walletId,
+          },
+        });
       } catch {
         localStorage.removeItem(STORAGE_KEY);
       }
@@ -143,6 +154,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify({ walletId, address })
         );
         await loadBalances(address);
+        pendo.identify({
+          visitor: {
+            id: address,
+            activeWalletId: walletId,
+          },
+        });
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Wallet connection failed.";
@@ -164,6 +181,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setActiveWalletId(null);
     setTxStatus("idle");
     localStorage.removeItem(STORAGE_KEY);
+    pendo.clearSession();
   }, []);
 
   const refreshBalance = useCallback(async () => {
