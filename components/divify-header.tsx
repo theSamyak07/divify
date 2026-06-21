@@ -1,7 +1,8 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
-import { shortenAddress, fundWithFriendbot } from "@/lib/stellar";
+import { shortenAddress } from "@/lib/stellar";
+import { fundWithFriendbotAction } from "@/lib/stellar-actions";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -56,7 +57,7 @@ export function DivifyHeader() {
   const handleFaucet = async () => {
     if (!publicKey) return;
     setFunding(true);
-    await fundWithFriendbot(publicKey);
+    await fundWithFriendbotAction(publicKey);
     await refreshBalance();
     setFunding(false);
   };

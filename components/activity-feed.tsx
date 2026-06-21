@@ -2,7 +2,8 @@
 
 import { useWallet } from "@/lib/wallet-context";
 import { useEffect, useState } from "react";
-import { horizonServer, shortenAddress } from "@/lib/stellar";
+import { shortenAddress } from "@/lib/stellar";
+import { fetchPaymentsAction } from "@/lib/stellar-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,18 +16,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface PaymentRecord {
-  id: string;
-  type: string;
-  transaction_hash: string;
-  created_at: string;
-  from: string;
-  to: string;
-  amount: string;
-  asset_type: string;
-  asset_code?: string;
-  transaction_successful: boolean;
-}
+import type { PaymentRecord } from "@/lib/stellar";
 
 export function ActivityFeed() {
   const { isConnected, publicKey } = useWallet();
@@ -36,21 +26,9 @@ export function ActivityFeed() {
   const fetchPayments = async () => {
     if (!publicKey) return;
     setLoading(true);
-    try {
-      const result = await horizonServer
-        .payments()
-        .forAccount(publicKey)
-        .order("desc")
-        .limit(10)
-        .call();
-      const records = result.records as unknown as PaymentRecord[];
-      // Only show payment and create_account operations
-      setPayments(records.filter((r) => r.type === "payment" || r.type === "create_account"));
-    } catch {
-      setPayments([]);
-    } finally {
-      setLoading(false);
-    }
+    const records = await fetchPaymentsAction(publicKey);
+    setPayments(records);
+    setLoading(false);
   };
 
   useEffect(() => {

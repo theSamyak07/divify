@@ -14,20 +14,16 @@ import {
   signTransaction,
 } from "@stellar/freighter-api";
 import {
-  fetchAccountBalances,
   getXLMBalance,
   StellarBalance,
   TransactionResult,
   STELLAR_NETWORK_PASSPHRASE,
-  horizonServer,
 } from "./stellar";
 import {
-  Asset,
-  TransactionBuilder,
-  Operation,
-  Memo,
-  BASE_FEE,
-} from "@stellar/stellar-sdk";
+  fetchAccountBalancesAction,
+  buildUnsignedTransactionAction,
+  submitSignedTransactionAction,
+} from "./stellar-actions";
 
 interface WalletContextType {
   isConnected: boolean;
@@ -57,7 +53,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadBalances = useCallback(async (pk: string) => {
-    const b = await fetchAccountBalances(pk);
+    const b = await fetchAccountBalancesAction(pk);
     setBalances(b);
     setXlmBalance(getXLMBalance(b));
   }, []);
@@ -68,17 +64,15 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const stored = localStorage.getItem("divify_wallet");
       if (!stored) return;
       try {
-        // Verify Freighter is still installed before trusting stored key
         const { isConnected: installed } = await freighterIsConnected();
         if (!installed) return;
-        // getAddress() returns silently — no popup — only if already authorized
+        // getAddress() is silent — no popup — only succeeds if already authorized
         const { address, error: addrErr } = await getAddress();
         if (addrErr || !address) return;
         setPublicKey(address);
         setConnected(true);
         await loadBalances(address);
       } catch {
-        // If anything fails, start fresh without crashing
         localStorage.removeItem("divify_wallet");
       }
     }
@@ -89,16 +83,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      // Step 1: make sure the extension is installed
       const { isConnected: installed } = await freighterIsConnected();
       if (!installed) {
         throw new Error(
           "Freighter wallet not found. Install the Freighter extension for Firefox or Chrome and try again."
         );
       }
-
-      // Step 2: requestAccess() prompts the user to authorize the dApp
-      // and returns the public key in one call
+      // requestAccess() triggers the Freighter popup and returns the public key
       const { address, error: accessErr } = await requestAccess();
       if (accessErr) {
         throw new Error(accessErr.message || "Access was denied by Freighter.");
@@ -106,7 +97,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!address) {
         throw new Error("Freighter did not return a public key.");
       }
-
       setPublicKey(address);
       setConnected(true);
       localStorage.setItem("divify_wallet", address);
@@ -142,33 +132,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     ): Promise<TransactionResult> => {
       if (!publicKey) return { success: false, error: "Wallet not connected." };
       try {
-        const account = await horizonServer.loadAccount(publicKey);
-        let txBuilder = new TransactionBuilder(account, {
-          fee: BASE_FEE,
-          networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
-        })
-          .addOperation(
-            Operation.payment({
-              destination,
-              asset: Asset.native(),
-              amount,
-            })
-          )
-          .setTimeout(30);
-
-        if (memo) {
-          txBuilder = txBuilder.addMemo(Memo.text(memo));
+        // Step 1: build the unsigned transaction on the server
+        const { xdr, error: buildErr } = await buildUnsignedTransactionAction(
+          publicKey,
+          destination,
+          amount,
+          memo
+        );
+        if (buildErr || !xdr) {
+          return { success: false, error: buildErr ?? "Failed to build transaction." };
         }
 
-        const tx = txBuilder.build();
-        const xdr = tx.toXDR();
-
-        // signTransaction() from @stellar/freighter-api — correct call signature
+        // Step 2: sign it in the browser with Freighter (client-side only)
         const { signedTxXdr, error: signErr } = await signTransaction(xdr, {
           networkPassphrase: STELLAR_NETWORK_PASSPHRASE,
           address: publicKey,
         });
-
         if (signErr) {
           throw new Error(signErr.message || "Transaction signing failed.");
         }
@@ -176,15 +155,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           throw new Error("Transaction signing cancelled.");
         }
 
-        const { TransactionBuilder: TB } = await import(
-          "@stellar/stellar-sdk"
-        );
-        const signedTx = TB.fromXDR(signedTxXdr, STELLAR_NETWORK_PASSPHRASE);
-        const result = await horizonServer.submitTransaction(signedTx);
-
-        await loadBalances(publicKey);
-
-        return { success: true, hash: result.hash };
+        // Step 3: submit the signed XDR on the server
+        const result = await submitSignedTransactionAction(signedTxXdr);
+        if (result.success) {
+          await loadBalances(publicKey);
+        }
+        return result;
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Transaction failed.";
