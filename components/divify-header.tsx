@@ -1,7 +1,7 @@
 "use client";
 
 import { useWallet } from "@/lib/wallet-context";
-import { shortenAddress } from "@/lib/stellar";
+import { shortenAddress, fundWithFriendbot } from "@/lib/stellar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,6 +19,8 @@ import {
   RefreshCw,
   Loader2,
   AlertCircle,
+  Droplets,
+  ExternalLink,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -36,6 +38,7 @@ export function DivifyHeader() {
 
   const [copied, setCopied] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [funding, setFunding] = useState(false);
 
   const handleCopy = () => {
     if (!publicKey) return;
@@ -48,6 +51,14 @@ export function DivifyHeader() {
     setRefreshing(true);
     await refreshBalance();
     setRefreshing(false);
+  };
+
+  const handleFaucet = async () => {
+    if (!publicKey) return;
+    setFunding(true);
+    await fundWithFriendbot(publicKey);
+    await refreshBalance();
+    setFunding(false);
   };
 
   return (
@@ -157,6 +168,28 @@ export function DivifyHeader() {
                   className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
                 />
                 Refresh Balance
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleFaucet}
+                className="gap-2 cursor-pointer text-stellar-amber focus:text-stellar-amber"
+                disabled={funding}
+              >
+                {funding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Droplets className="h-4 w-4" />
+                )}
+                {funding ? "Funding..." : "Fund with Testnet XLM"}
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="gap-2 cursor-pointer">
+                <a
+                  href={`https://stellar.expert/explorer/testnet/account/${publicKey}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View on Explorer
+                </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

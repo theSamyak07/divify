@@ -32,8 +32,8 @@ export async function fetchAccountBalances(
   try {
     const account = await horizonServer.loadAccount(publicKey);
     return account.balances as StellarBalance[];
-  } catch (err) {
-    console.error("[v0] Failed to fetch account balances:", err);
+  } catch {
+    // Account may not yet exist on testnet — return empty silently
     return [];
   }
 }
@@ -47,4 +47,27 @@ export interface TransactionResult {
   success: boolean;
   hash?: string;
   error?: string;
+}
+
+/** Fund a Testnet account using Stellar Friendbot */
+export async function fundWithFriendbot(
+  publicKey: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await fetch(
+      `https://friendbot.stellar.org?addr=${encodeURIComponent(publicKey)}`
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      // 400 with "createAccountAlreadyExist" means account exists — treat as success
+      const detail = body?.detail ?? "";
+      if (detail.includes("createAccountAlreadyExist")) {
+        return { success: true };
+      }
+      return { success: false, error: `Friendbot returned ${res.status}` };
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: "Could not reach Friendbot. Try again." };
+  }
 }

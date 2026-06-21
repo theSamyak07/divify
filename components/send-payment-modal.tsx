@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@/lib/wallet-context";
 import {
   Dialog,
@@ -47,6 +47,19 @@ export function SendPaymentModal({
   const [txHash, setTxHash] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [hashCopied, setHashCopied] = useState(false);
+
+  // Sync prefill values whenever the modal is opened with new props
+  useEffect(() => {
+    if (open) {
+      setDestination(prefillDestination);
+      setAmount(prefillAmount);
+      setMemo(prefillMemo);
+      setStatus("idle");
+      setTxHash(null);
+      setErrorMsg(null);
+      setHashCopied(false);
+    }
+  }, [open, prefillDestination, prefillAmount, prefillMemo]);
 
   const resetForm = () => {
     setDestination(prefillDestination);
