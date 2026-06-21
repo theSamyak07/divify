@@ -1,0 +1,3 @@
+[workspace]
+members = ["contracts/divify-splitter"]
+resolver = "2"
