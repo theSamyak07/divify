@@ -81,7 +81,7 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
             </p>
           </div>
           <Button
-            onClick={connectWallet}
+            onClick={() => connectWallet()}
             disabled={isLoading}
             className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2"
           >

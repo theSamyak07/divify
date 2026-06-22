@@ -118,7 +118,6 @@ export async function fetchContractExpenseEventsAction(
 
     const res = await fetch(url, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
     });
     if (!res.ok) return [];
     const data = await res.json();
