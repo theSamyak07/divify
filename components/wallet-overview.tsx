@@ -6,15 +6,7 @@ import { fundWithFriendbotAction } from "@/lib/stellar-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Wallet,
-  Copy,
-  ExternalLink,
-  ArrowUpRight,
-  RefreshCw,
-  Loader2,
-  Droplets,
-} from "lucide-react";
+import { Wallet, Copy, ExternalLink, ArrowUpRight, RefreshCw, Loader as Loader2, Droplets } from "lucide-react";
 import { useState } from "react";
 
 interface WalletOverviewProps {

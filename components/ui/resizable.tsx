@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { GripVerticalIcon } from 'lucide-react'
+import { GripVertical as GripVerticalIcon } from 'lucide-react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 
 import { cn } from '@/lib/utils'
