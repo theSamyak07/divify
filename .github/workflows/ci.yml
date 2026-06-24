@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── Frontend: lint + unit tests ──────────────────────────────────────────
+  frontend:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Run Vitest unit tests
+        run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: |
+            test-results/
+            coverage/
+
+  # ─── TypeScript type-check ─────────────────────────────────────────────────
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ─── Soroban smart contract: build + test ──────────────────────────────────
+  contract:
+    name: Soroban Contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/divify-splitter/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/divify-splitter/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Stellar CLI
+        run: cargo install --locked stellar-cli --features opt
+
+      - name: Build contract WASM
+        working-directory: contracts/divify-splitter
+        run: stellar contract build
+
+      - name: Run contract tests
+        working-directory: contracts/divify-splitter
+        run: cargo test --features testutils
+
+      - name: Upload contract WASM
+        uses: actions/upload-artifact@v4
+        with:
+          name: divify-splitter-wasm
+          path: contracts/divify-splitter/target/wasm32-unknown-unknown/release/divify_splitter.wasm
+
+  # ─── Deploy gate (main branch only) ────────────────────────────────────────
+  deploy-check:
+    name: Deploy Ready
+    needs: [frontend, typecheck, contract]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: All checks passed
+        run: echo "All CI checks passed — ready to deploy to Vercel"
