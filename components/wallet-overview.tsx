@@ -22,6 +22,7 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
     isLoading,
     connectWallet,
     refreshBalance,
+    activeWalletId,
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
@@ -53,6 +54,11 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
     } else {
       setFundMsg(result.error ?? "Faucet request failed.");
     }
+    pendo.track("testnet_faucet_funded", {
+      success: result.success,
+      walletId: activeWalletId,
+      fundingSource: "wallet_overview",
+    });
     setFunding(false);
     setTimeout(() => setFundMsg(null), 5000);
   };

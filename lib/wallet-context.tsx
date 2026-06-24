@@ -160,11 +160,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             activeWalletId: walletId,
           },
         });
+        pendo.track("wallet_connected", {
+          walletId: walletId,
+          network: "testnet",
+        });
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Wallet connection failed.";
         // Level 2: classify into one of the 3 error types
-        setWalletError(classifyWalletError(message));
+        const classified = classifyWalletError(message);
+        setWalletError(classified);
+        pendo.track("wallet_connection_failed", {
+          walletId: walletId,
+          errorType: classified.type,
+          errorMessage: message.substring(0, 100),
+        });
       } finally {
         setIsLoading(false);
       }
@@ -173,6 +183,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   );
 
   const disconnectWallet = useCallback(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const prevWalletId = stored ? JSON.parse(stored).walletId : null;
     setPublicKey(null);
     setConnected(false);
     setBalances([]);
@@ -181,6 +193,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setActiveWalletId(null);
     setTxStatus("idle");
     localStorage.removeItem(STORAGE_KEY);
+    pendo.track("wallet_disconnected", {
+      walletId: prevWalletId,
+    });
     pendo.clearSession();
   }, []);
 

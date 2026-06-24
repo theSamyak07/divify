@@ -100,12 +100,24 @@ export function SendPaymentModal({
             ),
         },
       });
+      pendo.track("xlm_payment_sent", {
+        amount: parseFloat(amount),
+        txHash: result.hash,
+        memo: memo || "",
+        source: prefillDestination ? "expense_split" : "direct",
+      });
     } else {
       setErrorMsg(result.error ?? "Transaction failed.");
       setStatus("error");
       toast.error("Transaction failed", {
         id: toastId,
         description: result.error ?? "Check your balance and try again.",
+      });
+      pendo.track("xlm_payment_failed", {
+        amount: parseFloat(amount),
+        errorMessage: (result.error ?? "Transaction failed.").substring(0, 100),
+        memo: memo || "",
+        source: prefillDestination ? "expense_split" : "direct",
       });
     }
   };
