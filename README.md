@@ -1,6 +1,6 @@
 # Divify — Multi-Currency Expense Splitter on Stellar
 
-**Stellar Journey to Mastery — Yellow Belt Submission (Level 2)**
+**Stellar Journey to Mastery — Orange Belt Submission (Level 3)**
 
 [![CI](https://github.com/theSamyak07/divify/actions/workflows/ci.yml/badge.svg)](https://github.com/theSamyak07/divify/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-23%20passing-brightgreen)](https://github.com/theSamyak07/divify/actions)
@@ -10,7 +10,7 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 
 ---
 
-## 🌐 Live Demo
+## Live Demo
 
 **→ [https://divify.vercel.app](https://divify.vercel.app)**
 
@@ -18,7 +18,7 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 
 ---
 
-## 📋 Level 2 Submission Details
+## Level 3 Submission Details
 
 | Item | Detail |
 |---|---|
@@ -34,13 +34,14 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 
 ---
 
-## ✅ Level 2 Requirements Checklist
+## Level 3 Requirements Checklist
 
 | Requirement | Status | Implementation |
 |---|---|---|
-| 3 error types handled | ✅ | `WalletErrorType`: `NOT_FOUND`, `REJECTED`, `INSUFFICIENT_BALANCE` in `lib/stellar.ts` |
+| Smart Contract (Rust) | ✅ | `contracts/divify-splitter/src/lib.rs` — `create_expense`, `split_and_pay`, `get_expense`, `get_expense_count` |
 | Contract deployed on testnet | ✅ | SAC address `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` displayed in UI |
 | Contract called from frontend | ✅ | `fetchContractExpenseEventsAction` + `getContractAddressAction` in `lib/stellar-actions.ts` |
+| 3 error types handled | ✅ | `WalletErrorType`: `NOT_FOUND`, `REJECTED`, `INSUFFICIENT_BALANCE` in `lib/stellar.ts` |
 | Transaction status visible | ✅ | `TxStatus` 5-state banner: `idle → pending → signing → submitting → success/error` |
 | Multi-wallet support | ✅ | Freighter, xBull, Albedo via `@creit.tech/stellar-wallets-kit` |
 | Event streaming | ✅ | `ContractInfo` polls Horizon every 15s for live payment events |
@@ -68,6 +69,13 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 - **Contract called from frontend** — `fetchContractExpenseEventsAction` reads on-chain data
 - **Event streaming** — live payment events with 15s polling from Horizon
 
+### Level 3 (Orange Belt)
+- **Full Soroban smart contract** — Rust contract with `create_expense`, `split_and_pay`, `get_expense`, `get_expense_count`
+- **Contract tests** — 3 Rust unit tests in `lib.rs` using `soroban-sdk/testutils`
+- **Inter-contract calls** — `split_and_pay` calls the Stellar Asset Contract (SAC) for native XLM transfers
+- **Contract events** — `expense_created` and `expense_paid` events emitted for frontend streaming
+- **Deployment script** — `contracts/deploy.sh` for building and deploying to testnet
+
 ---
 
 ## Tech Stack
@@ -76,7 +84,7 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 |---|---|
 | Framework | Next.js 16 (App Router + Server Actions) |
 | Blockchain | Stellar Testnet (Horizon API + Soroban RPC) |
-| Smart Contract | Rust + `soroban-sdk` 22 (Level 3) |
+| Smart Contract | Rust + `soroban-sdk` 22 |
 | Wallet Kit | `@creit.tech/stellar-wallets-kit` (Freighter, xBull, Albedo) |
 | Stellar SDK | `@stellar/stellar-sdk` (server-only via Next.js Server Actions) |
 | Testing | Vitest — 23 unit tests |
@@ -89,27 +97,53 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 
 **Location:** `contracts/divify-splitter/src/lib.rs`
 
-### Level 2: Contract Integration
-
-The frontend interacts with a deployed Stellar Asset Contract (SAC) for native XLM:
+### Contract Functions
 
 | Function | Description |
 |---|---|
-| `getContractAddressAction()` | Returns the deployed SAC address (`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`) |
-| `fetchContractExpenseEventsAction()` | Queries Horizon for payment operations as contract event proxy |
+| `create_expense(payer, description, total_amount, token, participants)` | Register a new group expense on-chain. Requires payer auth. Emits `expense_created` event. |
+| `split_and_pay(expense_id, payer, token, participants)` | Split and pay all participants via inter-contract call to SAC. Emits `expense_paid` event. |
+| `get_expense(id)` | Fetch a single expense record by ID. |
+| `get_expense_count()` | Return total number of expenses created. |
 
-The `ContractInfo` component (`components/contract-info.tsx`) displays the contract address and polls for live events every 15 seconds.
+### Contract Tests
 
-### Level 3: Full Soroban Contract (Future)
+```bash
+cd contracts/divify-splitter
+cargo test --features testutils
+```
 
-The repository includes a complete Soroban smart contract with `create_expense`, `split_and_pay`, `get_expense`, and `get_expense_count` functions. See `contracts/divify-splitter/src/lib.rs`.
+Tests cover:
+- `test_create_expense_stores_record` — expense creation and storage
+- `test_split_and_pay_transfers_tokens` — inter-contract token transfers
+- `test_expense_count_increments` — expense counter increment
+
+### Build & Deploy
+
+```bash
+# Build
+make build-contract
+
+# Deploy (requires Stellar CLI and funded testnet account)
+make deploy-contract ACCOUNT=alice
+```
+
+Or manually:
+```bash
+cd contracts/divify-splitter
+stellar contract build
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/divify_splitter.wasm \
+  --network testnet \
+  --source YOUR_ACCOUNT
+```
 
 ---
 
 ## Tests — 23 Passing
 
-```
-pnpm test
+```bash
+npm test
 ```
 
 ```
@@ -156,14 +190,18 @@ Tests       23 passed (23)
 ## Prerequisites
 
 - Node.js 20+ (`.nvmrc` included)
-- pnpm (or npm / yarn)
+- npm (or pnpm / yarn)
 - Stellar wallet browser extension:
   - [Freighter](https://www.freighter.app/) — recommended
   - [xBull](https://xbull.app/)
   - [Albedo](https://albedo.link/) — no install needed
-- Rust + `wasm32-unknown-unknown` (for contract development only):
+- Rust + `wasm32-unknown-unknown` (for contract development):
   ```bash
   rustup target add wasm32-unknown-unknown
+  ```
+- Stellar CLI (for contract deployment):
+  ```bash
+  cargo install stellar-cli --locked
   ```
 
 ---
@@ -173,9 +211,10 @@ Tests       23 passed (23)
 ```bash
 git clone https://github.com/theSamyak07/divify.git
 cd divify
-pnpm install
-pnpm test        # verify 23 tests pass
-pnpm dev         # http://localhost:3000
+npm install
+npm test        # verify 23 tests pass
+npm run build   # verify production build
+npm run dev     # http://localhost:3000
 ```
 
 No environment variables required — connects to the public Stellar Testnet APIs.
@@ -187,7 +226,7 @@ No environment variables required — connects to the public Stellar Testnet API
 ```
 app/
   page.tsx                    # Landing + responsive dashboard
-  layout.tsx                  # Root layout — WalletProvider + Novus analytics
+  layout.tsx                  # Root layout — WalletProvider + analytics
   globals.css                 # Tailwind v4 design tokens
 components/
   divify-header.tsx           # Sticky header, wallet connect
@@ -203,6 +242,7 @@ contracts/
     src/lib.rs                # Soroban contract: create_expense, split_and_pay  [L3]
     Cargo.toml                # soroban-sdk 22, wasm32 profile
   deploy.sh                   # Stellar CLI deployment script          [L3]
+  Makefile                    # build-contract, deploy-contract targets [L3]
 lib/
   wallet-context.tsx          # Wallet state + sendXLM() + txStatus
   stellar.ts                  # WalletErrorType, TxStatus, utilities
