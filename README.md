@@ -5,7 +5,7 @@
 [![CI](https://github.com/theSamyak07/divify/actions/workflows/ci.yml/badge.svg)](https://github.com/theSamyak07/divify/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/deployed-Vercel-black?logo=vercel)](https://divify.vercel.app)
 
-Divify is a **non-custodial expense splitting dApp** built on the **Stellar Testnet** using **Soroban smart contracts** and **Next.js**. It enables users to split expenses, connect multiple Stellar wallets, and settle payments securely on-chain without relying on centralized custody.
+Divify is a **non-custodial expense splitting dApp** built on the **Stellar Testnet** using **Soroban smart contracts** and **Next.js**. It enables users to split expenses, connect multiple Stellar wallets, and settle payments directly on the blockchain.
 
 This project was built as part of the **Stellar Journey to Mastery Belt Submission**, demonstrating smart contract development, frontend integration, wallet connectivity, automated testing, and production deployment.
 
@@ -13,8 +13,10 @@ This project was built as part of the **Stellar Journey to Mastery Belt Submissi
 
 # Live Demo
 
-* **Website:** https://divify.vercel.app
+* **Testnet Deployment:** https://divify.vercel.app
 * **Repository:** https://github.com/theSamyak07/divify
+
+> 🌐 The application is deployed on **Vercel** and connects to the **Stellar Testnet**
 
 ---
 
