@@ -20,12 +20,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ] || [ -f yarn.lock ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci --legacy-peer-deps
-          else
-            npm install --legacy-peer-deps
-          fi
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: Run Vitest unit tests
         run: npm test
@@ -52,12 +47,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ] || [ -f yarn.lock ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci --legacy-peer-deps
-          else
-            npm install --legacy-peer-deps
-          fi
+        run: npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
       - name: Type check
         run: npx tsc --noEmit
