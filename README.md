@@ -241,6 +241,9 @@ Deployment is handled through Vercel.
 * [stellar.expert - Transaction](https://stellar.expert/explorer/testnet/tx/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
 * [stellar-chain.io - Transaction](https://testnet.stellar-chain.io/transactions/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
 
+<img width="1907" height="912" alt="image" src="https://github.com/user-attachments/assets/5d1f124a-014d-4ed0-9780-70e4f7f7c984" />
+
+
 ## Checklist
 
 * ✅ Wallet connection
