@@ -76,6 +76,10 @@ This project was built as part of the **Stellar Journey to Mastery Belt Submissi
 CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
 
+**View on Testnet Explorer:**
+* [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
+* [stellar-chain.io](https://testnet.stellar-chain.io/contracts/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
+
 Main contract methods:
 
 * create_expense()
@@ -216,17 +220,26 @@ Deployment is handled through Vercel.
 
 # Submission Evidence
 
-## Contract Address
+## Deployed Testnet Application
 
-```
-CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-```
+* **Live URL:** https://divify.vercel.app
+* **Hosted on:** Vercel (Testnet environment)
+
+## Smart Contract Deployment
+
+**Contract Address:** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+
+**View Contract on Testnet:**
+* [stellar.expert - Contract Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
+* [stellar-chain.io - Contract Details](https://testnet.stellar-chain.io/contracts/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
 
 ## Example Transaction
 
-```
-0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4
-```
+**Transaction Hash:** `0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4`
+
+**View on Testnet Explorer:**
+* [stellar.expert - Transaction](https://stellar.expert/explorer/testnet/tx/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
+* [stellar-chain.io - Transaction](https://testnet.stellar-chain.io/transactions/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
 
 ## Checklist
 
@@ -237,6 +250,7 @@ CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 * ✅ Automated testing
 * ✅ GitHub Actions CI
 * ✅ Vercel deployment
+* ✅ Stellar Testnet explorer verification
 
 ---
 
