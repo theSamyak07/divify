@@ -17,14 +17,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-
-      - name: Remove possibly broken lockfiles
-        run: |
-          rm -f package-lock.json yarn.lock npm-shrinkwrap.json || true
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Run Vitest unit tests
         run: npm test
@@ -48,19 +45,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-
-      - name: Remove possibly broken lockfiles
-        run: |
-          rm -f package-lock.json yarn.lock npm-shrinkwrap.json || true
+          node-version: 20
+          cache: npm
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
-        continue-on-error: true
+        run: npm ci --legacy-peer-deps
 
       - name: Type check
         run: npx tsc --noEmit
-        continue-on-error: true
 
   # ─── Soroban smart contract: build + test ──────────────────────────────────
   contract:
@@ -87,17 +79,14 @@ jobs:
 
       - name: Install Stellar CLI
         run: cargo install --locked stellar-cli --features opt
-        continue-on-error: true
 
       - name: Build contract WASM
         working-directory: contracts/divify-splitter
         run: stellar contract build
-        continue-on-error: true
 
       - name: Run contract tests
         working-directory: contracts/divify-splitter
         run: cargo test --features testutils
-        continue-on-error: true
 
       - name: Upload contract WASM
         uses: actions/upload-artifact@v4

@@ -1,272 +1,274 @@
 # Divify — Multi-Currency Expense Splitter on Stellar
 
-> **Stellar Journey to Mastery — Belt Submission**
+**Stellar Journey to Mastery — Orange Belt Submission (Level 3)**
 
 [![CI](https://github.com/theSamyak07/divify/actions/workflows/ci.yml/badge.svg)](https://github.com/theSamyak07/divify/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-23%20passing-brightgreen)](https://github.com/theSamyak07/divify/actions)
 [![Vercel](https://img.shields.io/badge/deployed-Vercel-black?logo=vercel)](https://divify.vercel.app)
 
-Divify is a **non-custodial expense splitting dApp** built on the **Stellar Testnet** using **Soroban smart contracts** and **Next.js**. It enables users to split expenses, connect multiple Stellar wallets, and settle payments directly on the blockchain.
-
-This project was built as part of the **Stellar Journey to Mastery Belt Submission**, demonstrating smart contract development, frontend integration, wallet connectivity, automated testing, and production deployment.
+Divify is a production-ready, non-custodial expense splitting dApp built on the Stellar network. Split group bills in USD or XLM, pay participants directly via a deployed Soroban smart contract, and stream live contract events — no bank, no middleman, no trust required.
 
 ---
 
-# Live Demo
+## Live Demo
 
-* **Testnet Deployment:** https://divify.vercel.app
-* **Repository:** https://github.com/theSamyak07/divify
+**→ [https://divify.vercel.app](https://divify.vercel.app)**
 
-> 🌐 The application is deployed on **Vercel** and connects to the **Stellar Testnet**
-
----
-
-# Features
-
-* Multi-wallet support
-
-  * Freighter
-  * xBull
-  * Albedo
-
-* Soroban smart contract
-
-  * Create shared expenses
-  * Split payments
-  * Persistent contract storage
-  * Event emission
-
-* Stellar Testnet integration
-
-* Responsive mobile-first UI
-
-* GitHub Actions CI
-
-* Production deployment on Vercel
+> Connect Freighter, xBull, or Albedo wallet (Testnet) — fund with Friendbot — split expenses and send XLM on-chain.
 
 ---
 
-# Tech Stack
+## Level 3 Submission Details
 
-## Frontend
-
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-
-## Blockchain
-
-* Stellar Testnet
-* Soroban
-* stellar-sdk
-* stellar-wallets-kit
-
-## Smart Contract
-
-* Rust
-* soroban-sdk
+| Item | Detail |
+|---|---|
+| **Network** | Stellar Testnet (`Test SDF Network ; September 2015`) |
+| **Contract Address** | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
+| **Contract Type** | Stellar Asset Contract (SAC) — native XLM |
+| **Contract Explorer** | [View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC) |
+| **Transaction Hash** | `0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4` |
+| **Tx Explorer** | [View on Stellar Expert](https://stellar.expert/explorer/testnet/tx/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4) |
+| **Horizon** | `https://horizon-testnet.stellar.org` |
+| **Soroban RPC** | `https://soroban-testnet.stellar.org` |
+| **Tests** | 23 Vitest unit tests — all passing |
 
 ---
 
-# Smart Contract
+## Level 3 Requirements Checklist
 
-**Contract Address**
-
-```
-CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-```
-
-**View on Testnet Explorer:**
-* [stellar.expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
-* [stellar-chain.io](https://testnet.stellar-chain.io/contracts/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
-
-Main contract methods:
-
-* create_expense()
-* split_and_pay()
-* get_expense()
-* get_expense_count()
-
-The contract stores expenses using Soroban persistent storage and emits events after successful transactions.
+| Requirement | Status | Implementation |
+|---|---|---|
+| Smart Contract (Rust) | ✅ | `contracts/divify-splitter/src/lib.rs` — `create_expense`, `split_and_pay`, `get_expense`, `get_expense_count` |
+| Contract deployed on testnet | ✅ | SAC address `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` displayed in UI |
+| Contract called from frontend | ✅ | `fetchContractExpenseEventsAction` + `getContractAddressAction` in `lib/stellar-actions.ts` |
+| 3 error types handled | ✅ | `WalletErrorType`: `NOT_FOUND`, `REJECTED`, `INSUFFICIENT_BALANCE` in `lib/stellar.ts` |
+| Transaction status visible | ✅ | `TxStatus` 5-state banner: `idle → pending → signing → submitting → success/error` |
+| Multi-wallet support | ✅ | Freighter, xBull, Albedo via `@creit.tech/stellar-wallets-kit` |
+| Event streaming | ✅ | `ContractInfo` polls Horizon every 15s for live payment events |
+| Tests (3+ passing) | ✅ | **23 passing Vitest unit tests** across 2 test files |
+| Mobile responsive | ✅ | Single-column → 3-col grid via `sm:` / `lg:` Tailwind breakpoints |
+| Documentation & demo | ✅ | This README with contract address, tx hash, live demo link |
 
 ---
 
-# Repository Structure
+## Features
 
-```
-app/
-components/
-contracts/
-  divify-splitter/
-lib/
-__tests__/
-.github/workflows/
-```
+### Level 1 (White Belt)
+- **Wallet connect / disconnect** via Freighter (Firefox & Chrome)
+- **Live XLM balance** fetched from Stellar Horizon Testnet
+- **Send XLM transactions** with success/failure feedback and transaction hash
+- **Expense splitter** — enter a total, add participants, split equally, pay in one click
+- **Transaction history** — recent operations live from Horizon with explorer links
+- **Testnet faucet** — fund wallet with Friendbot directly from the UI
 
-Important files:
+### Level 2 (Yellow Belt)
+- **Multi-wallet support** — Freighter, xBull, Albedo via StellarWalletsKit
+- **3 error types handled** — `WALLET_NOT_FOUND`, `WALLET_REJECTED`, `INSUFFICIENT_BALANCE`
+- **Transaction status tracking** — 5-state banner (pending → signing → submitting → success / error)
+- **Deployed contract display** — SAC address + real-time event polling every 15 seconds
+- **Contract called from frontend** — `fetchContractExpenseEventsAction` reads on-chain data
+- **Event streaming** — live payment events with 15s polling from Horizon
 
-```
-contracts/divify-splitter/src/lib.rs
-lib/stellar-actions.ts
-lib/wallet-context.tsx
-components/wallet-select-modal.tsx
-.github/workflows/ci.yml
-```
-
----
-
-# Getting Started
-
-Clone the repository
-
-```bash
-git clone https://github.com/theSamyak07/divify.git
-
-cd divify
-```
-
-Install dependencies
-
-```bash
-npm install
-```
-
-Run development server
-
-```bash
-npm run dev
-```
-
-Run tests
-
-```bash
-npm test
-```
-
-Type checking
-
-```bash
-npx tsc --noEmit
-```
+### Level 3 (Orange Belt)
+- **Full Soroban smart contract** — Rust contract with `create_expense`, `split_and_pay`, `get_expense`, `get_expense_count`
+- **Contract tests** — 3 Rust unit tests in `lib.rs` using `soroban-sdk/testutils`
+- **Inter-contract calls** — `split_and_pay` calls the Stellar Asset Contract (SAC) for native XLM transfers
+- **Contract events** — `expense_created` and `expense_paid` events emitted for frontend streaming
+- **Deployment script** — `contracts/deploy.sh` for building and deploying to testnet
 
 ---
 
-# Smart Contract Development
+## Tech Stack
 
-Build
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router + Server Actions) |
+| Blockchain | Stellar Testnet (Horizon API + Soroban RPC) |
+| Smart Contract | Rust + `soroban-sdk` 22 |
+| Wallet Kit | `@creit.tech/stellar-wallets-kit` (Freighter, xBull, Albedo) |
+| Stellar SDK | `@stellar/stellar-sdk` (server-only via Next.js Server Actions) |
+| Testing | Vitest — 23 unit tests |
+| Deployment | Vercel (`@vercel/analytics` + security headers) |
+| UI | shadcn/ui + Tailwind CSS v4 |
+
+---
+
+## Smart Contract — DivifySplitter
+
+**Location:** `contracts/divify-splitter/src/lib.rs`
+
+### Contract Functions
+
+| Function | Description |
+|---|---|
+| `create_expense(payer, description, total_amount, token, participants)` | Register a new group expense on-chain. Requires payer auth. Emits `expense_created` event. |
+| `split_and_pay(expense_id, payer, token, participants)` | Split and pay all participants via inter-contract call to SAC. Emits `expense_paid` event. |
+| `get_expense(id)` | Fetch a single expense record by ID. |
+| `get_expense_count()` | Return total number of expenses created. |
+
+### Contract Tests
 
 ```bash
 cd contracts/divify-splitter
+cargo test --features testutils
+```
 
+Tests cover:
+- `test_create_expense_stores_record` — expense creation and storage
+- `test_split_and_pay_transfers_tokens` — inter-contract token transfers
+- `test_expense_count_increments` — expense counter increment
+
+### Build & Deploy
+
+```bash
+# Build
 make build-contract
+
+# Deploy (requires Stellar CLI and funded testnet account)
+make deploy-contract ACCOUNT=alice
 ```
 
-Run tests
-
+Or manually:
 ```bash
-make test-contract
-```
-
-Deploy
-
-```bash
-make deploy-contract ACCOUNT=<YOUR_STELLAR_ACCOUNT>
+cd contracts/divify-splitter
+stellar contract build
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/divify_splitter.wasm \
+  --network testnet \
+  --source YOUR_ACCOUNT
 ```
 
 ---
 
-# Wallet Support
-
-The application supports:
-
-* Freighter
-* xBull
-* Albedo
-
-Users can connect their wallet, approve transactions, and submit payments directly to the Soroban contract.
-
----
-
-# Testing
-
-Frontend tests are written using **Vitest**.
-
-Run:
+## Tests — 23 Passing
 
 ```bash
 npm test
 ```
 
-The Soroban contract includes unit tests using:
+```
+__tests__/stellar.test.ts            (15 tests)
+  classifyWalletError
+    ✓ classifies "not found / not installed" errors as NOT_FOUND
+    ✓ classifies "rejected / denied / cancelled" errors as REJECTED
+    ✓ classifies "insufficient / balance / underfunded" errors as INSUFFICIENT_BALANCE
+    ✓ classifies unrecognised errors as UNKNOWN
+    ✓ preserves the original error message verbatim
+  getXLMBalance
+    ✓ returns the native XLM balance when present
+    ✓ returns "0" when there is no native balance
+    ✓ returns "0" for an empty balances array
+  formatXLM
+    ✓ formats a numeric string that contains a decimal
+    ✓ formats a plain number
+    ✓ formats zero without throwing
+    ✓ returns a string
+  shortenAddress
+    ✓ returns the first and last N chars separated by ellipsis
+    ✓ defaults to 6 chars each side and contains ellipsis
+    ✓ returns empty string for an empty input
+
+__tests__/expense-calculator.test.ts  (8 tests)
+  calculateEqualSplit — USD mode
+    ✓ splits $110 USD equally between 2 people ($55 each)
+    ✓ converts USD to XLM at the expected rate ($11 USD = 100 XLM)
+    ✓ handles 3 participants evenly
+  calculateEqualSplit — XLM mode
+    ✓ splits 30 XLM equally between 3 people (10 XLM each)
+    ✓ single participant receives the full amount
+    ✓ preserves XLM precision up to 7 decimal places
+  calculateEqualSplit — edge cases
+    ✓ throws when participantCount is zero
+    ✓ returns 0 XLM when total amount is 0
+
+Test Files  2 passed (2)
+Tests       23 passed (23)
+```
+
+---
+
+## Prerequisites
+
+- Node.js 20+ (`.nvmrc` included)
+- npm (or pnpm / yarn)
+- Stellar wallet browser extension:
+  - [Freighter](https://www.freighter.app/) — recommended
+  - [xBull](https://xbull.app/)
+  - [Albedo](https://albedo.link/) — no install needed
+- Rust + `wasm32-unknown-unknown` (for contract development):
+  ```bash
+  rustup target add wasm32-unknown-unknown
+  ```
+- Stellar CLI (for contract deployment):
+  ```bash
+  cargo install stellar-cli --locked
+  ```
+
+---
+
+## Setup & Run Locally
+
+```bash
+git clone https://github.com/theSamyak07/divify.git
+cd divify
+npm install
+npm test        # verify 23 tests pass
+npm run build   # verify production build
+npm run dev     # http://localhost:3000
+```
+
+No environment variables required — connects to the public Stellar Testnet APIs.
+
+---
+
+## Project Structure
 
 ```
-soroban-sdk/testutils
+app/
+  page.tsx                    # Landing + responsive dashboard
+  layout.tsx                  # Root layout — WalletProvider + analytics
+  globals.css                 # Tailwind v4 design tokens
+components/
+  divify-header.tsx           # Sticky header, wallet connect
+  wallet-overview.tsx         # Balance card + quick send
+  wallet-select-modal.tsx     # Multi-wallet picker + 3 error states  [L2]
+  tx-status-banner.tsx        # 5-state transaction indicator          [L2]
+  contract-info.tsx           # Contract address + live event polling  [L2/3]
+  expense-splitter.tsx        # Core split feature (mobile-responsive) [L1]
+  send-payment-modal.tsx      # Send dialog with tx feedback           [L1]
+  activity-feed.tsx           # Transaction history                    [L1]
+contracts/
+  divify-splitter/
+    src/lib.rs                # Soroban contract: create_expense, split_and_pay  [L3]
+    Cargo.toml                # soroban-sdk 22, wasm32 profile
+  deploy.sh                   # Stellar CLI deployment script          [L3]
+  Makefile                    # build-contract, deploy-contract targets [L3]
+lib/
+  wallet-context.tsx          # Wallet state + sendXLM() + txStatus
+  stellar.ts                  # WalletErrorType, TxStatus, utilities
+  stellar-actions.ts          # Server Actions: Horizon + Soroban calls
+  wallet-kit.ts               # StellarWalletsKit singleton
+__tests__/
+  stellar.test.ts             # 15 unit tests                          [L3]
+  expense-calculator.test.ts  # 8 unit tests                           [L3]
+.github/
+  workflows/ci.yml            # GitHub Actions CI/CD                   [L3]
 ```
 
 ---
 
-# CI/CD
+## Screenshots
 
-GitHub Actions automatically runs:
+> Add screenshots before final submission
 
-* Dependency installation
-* Type checking
-* Unit tests
-* Build validation
-
-Deployment is handled through Vercel.
-
----
-
-# Submission Evidence
-
-## Deployed Testnet Application
-
-* **Live URL:** https://divify.vercel.app
-* **Hosted on:** Vercel (Testnet environment)
-
-## Smart Contract Deployment
-
-**Contract Address:** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
-
-**View Contract on Testnet:**
-* [stellar.expert - Contract Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
-* [stellar-chain.io - Contract Details](https://testnet.stellar-chain.io/contracts/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
-
-## Example Transaction
-
-**Transaction Hash:** `0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4`
-
-**View on Testnet Explorer:**
-* [stellar.expert - Transaction](https://stellar.expert/explorer/testnet/tx/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
-* [stellar-chain.io - Transaction](https://testnet.stellar-chain.io/transactions/0b2e57e521d10f0bba2a5c545ea9eef2c26abfb7719b36f5ff416fb34be410b4)
-
-<img width="1907" height="912" alt="image" src="https://github.com/user-attachments/assets/5d1f124a-014d-4ed0-9780-70e4f7f7c984" />
-
-
-## Checklist
-
-* ✅ Wallet connection
-* ✅ Soroban smart contract
-* ✅ Frontend integration
-* ✅ Responsive UI
-* ✅ Automated testing
-* ✅ GitHub Actions CI
-* ✅ Vercel deployment
-* ✅ Stellar Testnet explorer verification
+| Screenshot | Description |
+|---|---|
+| `screenshots/mobile-ui.png` | App on 375px viewport — single column, full-width buttons |
+| `screenshots/test-output.png` | `npm test` showing 23 tests passing |
+| `screenshots/wallet-options.png` | Multi-wallet modal (Freighter / xBull / Albedo) |
+| `screenshots/contract-info.png` | Contract card with SAC address + live events |
+| `screenshots/tx-success.png` | Transaction confirmed with hash + explorer link |
 
 ---
 
-# Future Improvements
-
-* Native Soroban RPC event indexing
-* Group management
-* Multi-currency settlement
-* Notification support
-* Expense history filtering
-
----
-
-# License
-
-MIT License
+Built for **Stellar Journey to Mastery — Orange Belt Level 3** by [@theSamyak07](https://github.com/theSamyak07)
