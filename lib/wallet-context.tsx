@@ -17,6 +17,7 @@ import {
   classifyWalletError,
   WalletErrorType,
   STELLAR_NETWORK_PASSPHRASE,
+  shortenAddress,
   type StellarBalance,
   type TransactionResult,
   type TxStatus,
@@ -27,6 +28,7 @@ import {
   buildUnsignedTransactionAction,
   submitSignedTransactionAction,
 } from "./stellar-actions";
+import { logUserActivity } from "./supabase";
 
 // Wallet IDs from StellarWalletsKit
 export const WALLET_IDS = {
@@ -160,6 +162,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
             activeWalletId: walletId,
           },
         });
+        void logUserActivity(address, "wallet_connected", walletId);
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Wallet connection failed.";
@@ -262,6 +265,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (result.success) {
           setTxStatus("success");
           await loadBalances(publicKey);
+          void logUserActivity(
+            publicKey,
+            "payment_sent",
+            `${amount} XLM to ${shortenAddress(destination)}`,
+            result.hash,
+            parseFloat(amount)
+          );
           // Reset to idle after a delay
           setTimeout(() => setTxStatus("idle"), 4000);
         } else {

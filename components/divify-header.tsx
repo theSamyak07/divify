@@ -95,7 +95,7 @@ export function DivifyHeader({ onConnectClick }: DivifyHeaderProps = {}) {
 
       {/* Nav — hidden on mobile */}
       <nav className="hidden md:flex items-center gap-1">
-        {["Dashboard", "Groups", "History"].map((item) => (
+        {["Dashboard", "Analytics", "Profile", "History"].map((item) => (
           <button
             key={item}
             className="px-4 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"

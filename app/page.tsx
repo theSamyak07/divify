@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DivifyHeader } from "@/components/divify-header";
 import { WalletOverview } from "@/components/wallet-overview";
 import { ExpenseSplitter } from "@/components/expense-splitter";
@@ -9,6 +9,11 @@ import { SendPaymentModal } from "@/components/send-payment-modal";
 import { WalletSelectModal } from "@/components/wallet-select-modal";
 import { TxStatusBanner } from "@/components/tx-status-banner";
 import { ContractInfo } from "@/components/contract-info";
+import { OnboardingModal } from "@/components/onboarding-modal";
+import { FeedbackModal } from "@/components/feedback-modal";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { ReferralCard } from "@/components/referral-card";
+import { GuidedTour } from "@/components/guided-tour";
 import { useWallet } from "@/lib/wallet-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +26,9 @@ import {
   ChevronRight,
   Loader2,
   FileCode2,
+  MessageSquare,
+  UserPlus,
+  TrendingUp,
 } from "lucide-react";
 
 function HeroSection({
@@ -52,6 +60,12 @@ function HeroSection({
           className="border-orange-500/40 text-orange-500 px-3 py-1 text-xs font-medium"
         >
           Orange Belt
+        </Badge>
+        <Badge
+          variant="outline"
+          className="border-stellar-blue/40 text-stellar-blue px-3 py-1 text-xs font-medium"
+        >
+          Blue Belt
         </Badge>
       </div>
       <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-foreground tracking-tight text-balance mb-4">
@@ -140,20 +154,33 @@ function HeroSection({
           Deployed Contract
         </span>
         <span className="text-border hidden sm:inline">·</span>
-        <span>Stellar Journey to Mastery — Level 1 / 2 / 3</span>
+        <span>Stellar Journey to Mastery — Level 1 / 2 / 3 / 5</span>
       </div>
     </div>
   );
 }
 
+type DashboardTab = "overview" | "analytics" | "profile";
+
 function Dashboard({
   onSendClick,
+  onFeedbackClick,
+  onOnboardingClick,
 }: {
   onSendClick: () => void;
+  onFeedbackClick: () => void;
+  onOnboardingClick: () => void;
 }) {
   const { isConnected } = useWallet();
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
 
   if (!isConnected) return null;
+
+  const tabs: { id: DashboardTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: "overview", label: "Overview", icon: Split },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "profile", label: "Profile", icon: UserPlus },
+  ];
 
   return (
     <div className="mx-auto max-w-6xl px-4 md:px-6 py-6 flex flex-col gap-5">
@@ -167,32 +194,101 @@ function Dashboard({
             Manage expenses and send XLM on Stellar Testnet
           </p>
         </div>
-        <Button
-          onClick={onSendClick}
-          className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2 w-full sm:w-auto"
-        >
-          <Wallet className="h-4 w-4" />
-          Quick Send
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={onFeedbackClick}
+            className="border-border gap-2 flex-1 sm:flex-none"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Feedback
+          </Button>
+          <Button
+            onClick={onSendClick}
+            className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2 flex-1 sm:flex-none"
+          >
+            <Wallet className="h-4 w-4" />
+            Quick Send
+          </Button>
+        </div>
+      </div>
+
+      {/* Tab navigation */}
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1 overflow-x-auto">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === id
+                ? "bg-stellar-teal text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent"
+            }`}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Transaction status banner */}
       <TxStatusBanner />
 
-      {/* Main layout: single col on mobile, 3-col grid on lg */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Left column */}
-        <div className="flex flex-col gap-5">
-          <WalletOverview onSendClick={onSendClick} />
-          <ContractInfo />
-          <ActivityFeed />
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="flex flex-col gap-5">
+            <WalletOverview onSendClick={onSendClick} />
+            <ContractInfo />
+            <ActivityFeed />
+          </div>
+          <div className="lg:col-span-2">
+            <ExpenseSplitter />
+          </div>
         </div>
+      )}
 
-        {/* Right column — expense splitter spans 2 cols on large screens */}
-        <div className="lg:col-span-2">
-          <ExpenseSplitter />
+      {activeTab === "analytics" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2">
+            <AnalyticsDashboard />
+          </div>
+          <div className="flex flex-col gap-5">
+            <ReferralCard />
+            <ContractInfo />
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === "profile" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="flex flex-col gap-5">
+            <ReferralCard />
+            <WalletOverview onSendClick={onSendClick} />
+          </div>
+          <div className="lg:col-span-2 flex flex-col gap-5">
+            <div className="rounded-lg border border-stellar-teal/20 bg-stellar-teal/5 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <UserPlus className="h-5 w-5 text-stellar-teal" />
+                <h3 className="text-base font-semibold text-foreground">
+                  Profile & Onboarding
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Complete your profile to join the Divify community, get your
+                referral code, and help us improve with feedback.
+              </p>
+              <Button
+                onClick={onOnboardingClick}
+                className="bg-stellar-teal text-primary-foreground hover:bg-stellar-teal/90 gap-2"
+              >
+                <UserPlus className="h-4 w-4" />
+                Edit Profile
+              </Button>
+            </div>
+            <AnalyticsDashboard />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -200,13 +296,28 @@ function Dashboard({
 export default function Home() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+
+  // Check for referral code in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      localStorage.setItem("divify_pending_referral", ref);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DivifyHeader onConnectClick={() => setWalletModalOpen(true)} />
       <main className="flex-1">
         <HeroSection onConnectClick={() => setWalletModalOpen(true)} />
-        <Dashboard onSendClick={() => setSendModalOpen(true)} />
+        <Dashboard
+          onSendClick={() => setSendModalOpen(true)}
+          onFeedbackClick={() => setFeedbackModalOpen(true)}
+          onOnboardingClick={() => setOnboardingModalOpen(true)}
+        />
       </main>
 
       {/* Footer — stacked on mobile */}
@@ -247,6 +358,9 @@ export default function Home() {
         </div>
       </footer>
 
+      {/* Guided tour for new users */}
+      <GuidedTour />
+
       {/* Modals */}
       <WalletSelectModal
         open={walletModalOpen}
@@ -255,6 +369,14 @@ export default function Home() {
       <SendPaymentModal
         open={sendModalOpen}
         onClose={() => setSendModalOpen(false)}
+      />
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+      />
+      <OnboardingModal
+        open={onboardingModalOpen}
+        onClose={() => setOnboardingModalOpen(false)}
       />
     </div>
   );
