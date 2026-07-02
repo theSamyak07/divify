@@ -15,6 +15,7 @@ import { GuidedTour } from "@/components/guided-tour";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { ReferralCard } from "@/components/referral-card";
 import { useWallet } from "@/lib/wallet-context";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -322,8 +323,6 @@ function ProfileTab({
     </div>
   );
 }
-
-import { supabase } from "@/lib/supabase";
 
 function DashboardContent({
   activeTab,
