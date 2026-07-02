@@ -27,6 +27,8 @@ import {
   buildUnsignedTransactionAction,
   submitSignedTransactionAction,
 } from "./stellar-actions";
+import { logUserActivity } from "./supabase";
+import { shortenAddress } from "./stellar";
 
 // Wallet IDs from StellarWalletsKit
 export const WALLET_IDS = {
@@ -154,6 +156,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify({ walletId, address })
         );
         await loadBalances(address);
+        void logUserActivity(address, "wallet_connected", walletId);
         pendo.identify({
           visitor: {
             id: address,
@@ -262,6 +265,13 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (result.success) {
           setTxStatus("success");
           await loadBalances(publicKey);
+          void logUserActivity(
+            publicKey,
+            "payment_sent",
+            `${amount} XLM to ${shortenAddress(destination)}`,
+            result.hash,
+            parseFloat(amount)
+          );
           // Reset to idle after a delay
           setTimeout(() => setTxStatus("idle"), 4000);
         } else {
