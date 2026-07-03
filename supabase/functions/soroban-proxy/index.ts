@@ -1,4 +1,10 @@
+/// <reference types="https://deno.land/x/deno@v1.0.0/deno.d.ts" />
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+
+// Deno global is provided by the Supabase Edge Runtime
+declare const Deno: {
+  serve(handler: (req: Request) => Response | Promise<Response>): void;
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
