@@ -78,7 +78,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install Stellar CLI
-        run: cargo install --locked stellar-cli
+        run: cargo install --locked stellar-cli --features opt
 
       - name: Build contract WASM
         working-directory: contracts/divify-splitter
