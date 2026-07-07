@@ -27,6 +27,17 @@ import {
   buildUnsignedTransactionAction,
   submitSignedTransactionAction,
 } from "./stellar-actions";
+import { logUserActivity, upsertUserProfile } from "./supabase";
+
+declare global {
+  interface Window {
+    pendo?: {
+      initialize: (opts: unknown) => void;
+      identify: (opts: unknown) => void;
+      clearSession: () => void;
+    };
+  }
+}
 
 // Wallet IDs from StellarWalletsKit
 export const WALLET_IDS = {
@@ -79,7 +90,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   // Boot Pendo SDK once with an anonymous visitor
   useEffect(() => {
-    pendo.initialize({ visitor: { id: '' } });
+    window.pendo?.initialize({ visitor: { id: '' } });
   }, []);
 
   // Auto-reconnect on page load using persisted wallet ID
@@ -99,7 +110,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setConnected(true);
         setActiveWalletId(walletId);
         await loadBalances(address);
-        pendo.identify({
+        window.pendo?.identify({
           visitor: {
             id: address,
             activeWalletId: walletId,
@@ -154,7 +165,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify({ walletId, address })
         );
         await loadBalances(address);
-        pendo.identify({
+        // Level 5: Log wallet connect activity & upsert user profile
+        upsertUserProfile({ wallet_address: address, name: "", email: "" }).catch(() => {});
+        logUserActivity({
+          wallet_address: address,
+          action_type: "wallet_connect",
+          action_detail: walletId,
+        }).catch(() => {});
+        window.pendo?.identify({
           visitor: {
             id: address,
             activeWalletId: walletId,
@@ -181,7 +199,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setActiveWalletId(null);
     setTxStatus("idle");
     localStorage.removeItem(STORAGE_KEY);
-    pendo.clearSession();
+    window.pendo?.clearSession();
   }, []);
 
   const refreshBalance = useCallback(async () => {
@@ -262,7 +280,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (result.success) {
           setTxStatus("success");
           await loadBalances(publicKey);
-          // Reset to idle after a delay
+          // Level 5: Log successful payment activity
+          logUserActivity({
+            wallet_address: publicKey,
+            action_type: "send_xlm",
+            action_detail: destination,
+            amount_xlm: parseFloat(amount),
+            tx_hash: result.hash,
+          }).catch(() => {});
           setTimeout(() => setTxStatus("idle"), 4000);
         } else {
           setTxStatus("error");
