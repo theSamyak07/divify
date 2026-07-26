@@ -291,7 +291,7 @@ function Dashboard({
                 </div>
                 <div className="mt-4 flex gap-2">
                   <a
-                    href="https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+                    href="https://stellar.expert/explorer/testnet/contract/CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD"
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-stellar-teal hover:underline"

@@ -12,7 +12,7 @@ export const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
  * Deployed via: stellar contract deploy --wasm divify_splitter.wasm --network testnet
  */
 export const DIVIFY_CONTRACT_ADDRESS =
-  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+  "CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD";
 
 /** Represents a contract expense event emitted by DivifySplitter. */
 export interface ContractExpenseEvent {
