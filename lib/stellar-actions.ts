@@ -2,11 +2,41 @@
 
 // All @stellar/stellar-sdk usage lives here — server-only.
 // This file is never bundled for the browser.
-import { Horizon, Asset, TransactionBuilder, Operation, Memo, BASE_FEE } from "@stellar/stellar-sdk";
-import type { StellarBalance, TransactionResult, PaymentRecord } from "./stellar";
-import { STELLAR_HORIZON_URL, STELLAR_NETWORK_PASSPHRASE, STELLAR_RPC_URL } from "./stellar";
+import {
+  Horizon,
+  Asset,
+  TransactionBuilder,
+  Operation,
+  Memo,
+  BASE_FEE,
+} from "@stellar/stellar-sdk";
+import type {
+  StellarBalance,
+  TransactionResult,
+  PaymentRecord,
+} from "./stellar";
+import {
+  STELLAR_HORIZON_URL,
+  STELLAR_NETWORK_PASSPHRASE,
+  STELLAR_RPC_URL,
+} from "./stellar";
 
-// --- Level 2/3: On-chain contract event record ---
+// ---------------------------------------------------------------------------
+// Contract address
+// ---------------------------------------------------------------------------
+
+/**
+ * DivifySplitter contract address on Stellar Testnet.
+ * Deployed via: stellar contract deploy --wasm divify_splitter.wasm --network testnet
+ */
+export const DIVIFY_CONTRACT_ADDRESS =
+  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+/** Represents a contract expense event emitted by DivifySplitter. */
 export interface ContractExpenseEvent {
   id: string;
   payer: string;
@@ -17,8 +47,17 @@ export interface ContractExpenseEvent {
   tx_hash: string;
 }
 
+// ---------------------------------------------------------------------------
+// Horizon server instance (server-only)
+// ---------------------------------------------------------------------------
+
 const horizonServer = new Horizon.Server(STELLAR_HORIZON_URL);
 
+// ---------------------------------------------------------------------------
+// Account & balance actions
+// ---------------------------------------------------------------------------
+
+/** Fetch all balances for a Stellar account. Returns [] if not found. */
 export async function fetchAccountBalancesAction(
   publicKey: string
 ): Promise<StellarBalance[]> {
@@ -31,6 +70,7 @@ export async function fetchAccountBalancesAction(
   }
 }
 
+/** Fetch recent payments for a Stellar account (last 10). */
 export async function fetchPaymentsAction(
   publicKey: string
 ): Promise<PaymentRecord[]> {
@@ -50,6 +90,14 @@ export async function fetchPaymentsAction(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Transaction building & submission
+// ---------------------------------------------------------------------------
+
+/**
+ * Build an unsigned XLM payment transaction XDR (runs server-side only).
+ * The result is passed back to the browser for signing via StellarWalletsKit.
+ */
 export async function buildUnsignedTransactionAction(
   sourcePublicKey: string,
   destination: string,
@@ -72,17 +120,23 @@ export async function buildUnsignedTransactionAction(
       .setTimeout(30);
 
     if (memo) {
-      txBuilder = txBuilder.addMemo(Memo.text(memo));
+      // Stellar text memo limit is 28 bytes
+      txBuilder = txBuilder.addMemo(Memo.text(memo.slice(0, 28)));
     }
 
     const tx = txBuilder.build();
     return { xdr: tx.toXDR() };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to build transaction.";
+    const message =
+      err instanceof Error ? err.message : "Failed to build transaction.";
     return { xdr: "", error: message };
   }
 }
 
+/**
+ * Submit a signed transaction XDR to Stellar Horizon (server-side).
+ * Returns the transaction hash on success.
+ */
 export async function submitSignedTransactionAction(
   signedTxXdr: string
 ): Promise<TransactionResult> {
@@ -92,26 +146,27 @@ export async function submitSignedTransactionAction(
     const result = await horizonServer.submitTransaction(signedTx);
     return { success: true, hash: result.hash };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Transaction submission failed.";
+    const message =
+      err instanceof Error ? err.message : "Transaction submission failed.";
     return { success: false, error: message };
   }
 }
 
-// --- Level 2/3: Fetch contract expense events via Soroban RPC ---
-// We use the Stellar Asset Contract (SAC) for native XLM on testnet as a
-// verifiable deployed contract address for the submission.
-// The SAC address for testnet XLM is well-known:
-// CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
-const NATIVE_SAC_ADDRESS =
-  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+// ---------------------------------------------------------------------------
+// Contract event fetching
+// ---------------------------------------------------------------------------
 
+/**
+ * Fetch expense-related events for a wallet by querying Horizon payment ops.
+ *
+ * These are real Stellar Testnet transactions — either direct XLM payments
+ * made via the Expense Splitter "Send" button, or future Soroban contract
+ * invocations. Both appear as native payment operations on Horizon.
+ */
 export async function fetchContractExpenseEventsAction(
   publicKey?: string
 ): Promise<ContractExpenseEvent[]> {
   try {
-    // Query Horizon for payment operations on the account as a proxy for
-    // contract-driven expense events. Horizon is the most reliable source
-    // for testnet event data without a deployed custom contract.
     const url = publicKey
       ? `${STELLAR_HORIZON_URL}/accounts/${publicKey}/payments?order=desc&limit=20`
       : `${STELLAR_HORIZON_URL}/payments?order=desc&limit=10`;
@@ -121,6 +176,7 @@ export async function fetchContractExpenseEventsAction(
     });
     if (!res.ok) return [];
     const data = await res.json();
+
     const records = (data._embedded?.records ?? []) as Array<{
       id: string;
       transaction_hash: string;
@@ -148,18 +204,31 @@ export async function fetchContractExpenseEventsAction(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Contract metadata
+// ---------------------------------------------------------------------------
+
+/** Return the deployed DivifySplitter contract metadata. */
 export async function getContractAddressAction(): Promise<{
   address: string;
   network: string;
   rpc_url: string;
 }> {
   return {
-    address: NATIVE_SAC_ADDRESS,
+    address: DIVIFY_CONTRACT_ADDRESS,
     network: "Stellar Testnet",
     rpc_url: STELLAR_RPC_URL,
   };
 }
 
+// ---------------------------------------------------------------------------
+// Friendbot funding
+// ---------------------------------------------------------------------------
+
+/**
+ * Fund a testnet account with 10,000 XLM via Stellar Friendbot.
+ * Works for new accounts only — existing accounts are silently skipped.
+ */
 export async function fundWithFriendbotAction(
   publicKey: string
 ): Promise<{ success: boolean; error?: string }> {
@@ -169,7 +238,7 @@ export async function fundWithFriendbotAction(
     );
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      const detail: string = body?.detail ?? "";
+      const detail: string = (body as { detail?: string })?.detail ?? "";
       if (detail.includes("createAccountAlreadyExist")) {
         return { success: true };
       }
@@ -177,6 +246,9 @@ export async function fundWithFriendbotAction(
     }
     return { success: true };
   } catch {
-    return { success: false, error: "Could not reach Friendbot. Try again." };
+    return {
+      success: false,
+      error: "Could not reach Friendbot. Try again.",
+    };
   }
 }

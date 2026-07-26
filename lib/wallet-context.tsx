@@ -27,7 +27,7 @@ import {
   buildUnsignedTransactionAction,
   submitSignedTransactionAction,
 } from "./stellar-actions";
-import { logUserActivity, upsertUserProfile } from "./supabase";
+import { upsertUserProfile, touchUserActivity } from "./local-storage";
 
 declare global {
   interface Window {
@@ -90,7 +90,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   // Boot Pendo SDK once with an anonymous visitor
   useEffect(() => {
-    window.pendo?.initialize({ visitor: { id: '' } });
+    window.pendo?.initialize({ visitor: { id: "" } });
   }, []);
 
   // Auto-reconnect on page load using persisted wallet ID
@@ -128,11 +128,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setWalletError(null);
       try {
-        // Level 2: ensure kit is initialised before connecting
         await initWalletKit();
 
         if (!isKitReady()) {
-          // Kit failed to init — most likely the wallet extension is not installed
           throw new Error(
             `${walletId} wallet extension not found. Please install it and try again.`
           );
@@ -140,7 +138,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
         StellarWalletsKit.setWallet(walletId);
 
-        // Level 2 error type: WALLET_NOT_FOUND if module not available
         let address: string;
         try {
           const result = await StellarWalletsKit.fetchAddress();
@@ -165,13 +162,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify({ walletId, address })
         );
         await loadBalances(address);
-        // Level 5: Log wallet connect activity & upsert user profile
-        upsertUserProfile({ wallet_address: address, name: "", email: "" }).catch(() => {});
-        logUserActivity({
-          wallet_address: address,
-          action_type: "wallet_connect",
-          action_detail: walletId,
-        }).catch(() => {});
+
+        // Level 5: Store user profile in localStorage (no Supabase needed)
+        upsertUserProfile({ wallet_address: address, name: "", email: "" });
+        touchUserActivity(address);
+
         window.pendo?.identify({
           visitor: {
             id: address,
@@ -181,7 +176,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Wallet connection failed.";
-        // Level 2: classify into one of the 3 error types
         setWalletError(classifyWalletError(message));
       } finally {
         setIsLoading(false);
@@ -216,7 +210,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       if (!publicKey)
         return { success: false, error: "Wallet not connected." };
 
-      // Level 2: explicit insufficient balance check
+      // Explicit insufficient balance check
       const balance = parseFloat(xlmBalance);
       const needed = parseFloat(amount);
       if (needed > balance) {
@@ -248,7 +242,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
         setTxStatus("signing");
 
-        // Step 2: sign in the browser via StellarWalletsKit (supports all wallets)
+        // Step 2: sign in the browser via StellarWalletsKit
         let signedTxXdr: string;
         try {
           const sigResult = await StellarWalletsKit.signTransaction(xdr, {
@@ -259,7 +253,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         } catch (signErr: unknown) {
           const msg =
             signErr instanceof Error ? signErr.message : "Signing failed.";
-          // Level 2: classify as rejected if user cancelled
           const classified = classifyWalletError(msg);
           if (classified.type === WalletErrorType.REJECTED) {
             setTxStatus("idle");
@@ -280,14 +273,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (result.success) {
           setTxStatus("success");
           await loadBalances(publicKey);
-          // Level 5: Log successful payment activity
-          logUserActivity({
-            wallet_address: publicKey,
-            action_type: "send_xlm",
-            action_detail: destination,
-            amount_xlm: parseFloat(amount),
-            tx_hash: result.hash,
-          }).catch(() => {});
+          // Update activity timestamp
+          touchUserActivity(publicKey);
           setTimeout(() => setTxStatus("idle"), 4000);
         } else {
           setTxStatus("error");
