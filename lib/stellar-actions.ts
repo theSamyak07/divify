@@ -1,7 +1,7 @@
 "use server";
 
-// All @stellar/stellar-sdk usage lives here — server-only.
-// This file is never bundled for the browser.
+// All @stellar/stellar-sdk usage lives here — server-only actions.
+// Next.js requires ALL exports from "use server" files to be async functions.
 import {
   Horizon,
   Asset,
@@ -14,38 +14,14 @@ import type {
   StellarBalance,
   TransactionResult,
   PaymentRecord,
+  ContractExpenseEvent,
 } from "./stellar";
 import {
   STELLAR_HORIZON_URL,
   STELLAR_NETWORK_PASSPHRASE,
   STELLAR_RPC_URL,
+  DIVIFY_CONTRACT_ADDRESS,
 } from "./stellar";
-
-// ---------------------------------------------------------------------------
-// Contract address
-// ---------------------------------------------------------------------------
-
-/**
- * DivifySplitter contract address on Stellar Testnet.
- * Deployed via: stellar contract deploy --wasm divify_splitter.wasm --network testnet
- */
-export const DIVIFY_CONTRACT_ADDRESS =
-  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/** Represents a contract expense event emitted by DivifySplitter. */
-export interface ContractExpenseEvent {
-  id: string;
-  payer: string;
-  description: string;
-  amount_xlm: string;
-  participant_count: number;
-  timestamp: string;
-  tx_hash: string;
-}
 
 // ---------------------------------------------------------------------------
 // Horizon server instance (server-only)
@@ -158,10 +134,6 @@ export async function submitSignedTransactionAction(
 
 /**
  * Fetch expense-related events for a wallet by querying Horizon payment ops.
- *
- * These are real Stellar Testnet transactions — either direct XLM payments
- * made via the Expense Splitter "Send" button, or future Soroban contract
- * invocations. Both appear as native payment operations on Horizon.
  */
 export async function fetchContractExpenseEventsAction(
   publicKey?: string
@@ -227,7 +199,6 @@ export async function getContractAddressAction(): Promise<{
 
 /**
  * Fund a testnet account with 10,000 XLM via Stellar Friendbot.
- * Works for new accounts only — existing accounts are silently skipped.
  */
 export async function fundWithFriendbotAction(
   publicKey: string

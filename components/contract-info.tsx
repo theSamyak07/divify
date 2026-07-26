@@ -8,9 +8,8 @@ import { useWallet } from "@/lib/wallet-context";
 import {
   fetchContractExpenseEventsAction,
   getContractAddressAction,
-  type ContractExpenseEvent,
 } from "@/lib/stellar-actions";
-import { shortenAddress } from "@/lib/stellar";
+import { shortenAddress, type ContractExpenseEvent } from "@/lib/stellar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
