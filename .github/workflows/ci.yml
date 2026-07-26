@@ -55,6 +55,10 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
+      - name: Lock ed25519-dalek to 2.1.1
+        working-directory: contracts/divify-splitter
+        run: cargo generate-lockfile && cargo update -p ed25519-dalek --precise 2.1.1 || true
+
       - name: Build contract WASM
         working-directory: contracts/divify-splitter
         run: cargo build --target wasm32-unknown-unknown --release
