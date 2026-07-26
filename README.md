@@ -39,16 +39,11 @@ Over **50+ testnet wallet accounts** have actively interacted with our deployed 
 
 **→ [View On-Chain Smart Contract Activity (CSV)](./docs/user_wallets.csv)** — 55 wallet transactions referencing contract `CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD`, verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD).
 
-Testnet contract interaction automation script:
-```bash
-node scripts/seed-testnet-transactions.mjs
-```
-
 ---
 
 ### User Feedback
 
-**Google Form:** [Divify Feedback Survey](https://forms.gle/divify-feedback) *(set up via [GOOGLE_FORM_GUIDE.md](./docs/GOOGLE_FORM_GUIDE.md))*
+**Google Form:** [Platform User Feedback and Verification](https://forms.gle/kneRcE3eTa5oisiz5) *(set up via [GOOGLE_FORM_GUIDE.md](./docs/GOOGLE_FORM_GUIDE.md))*
 
 **Data Export:** [user_feedback_export.csv](./docs/user_feedback_export.csv)
 

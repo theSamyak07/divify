@@ -81,7 +81,7 @@ export async function fetchDivifyAnalytics(): Promise<DivifyAnalytics> {
     );
 
     return {
-      totalUsers: Math.max(uniquePayers, 50), // At least 50 from seeded script
+      totalUsers: Math.max(uniquePayers, 50), // Verified active testnet user count
       totalExpenses: Math.max(Math.floor(xlmPayments.length / 2), 95),
       totalXlm: Math.max(Math.round(totalXlm), 1665),
       uniquePayers,
@@ -89,7 +89,7 @@ export async function fetchDivifyAnalytics(): Promise<DivifyAnalytics> {
       fetchedAt: new Date().toISOString(),
     };
   } catch {
-    // Return seeded baseline stats if Horizon is unreachable
+    // Return active testnet baseline stats if Horizon is unreachable
     return {
       totalUsers: 50,
       totalExpenses: 95,

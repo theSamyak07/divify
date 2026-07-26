@@ -281,7 +281,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(Contract, 5)")]
+    #[should_panic(expected = "Error(Contract, #5)")]
     fn test_create_expense_invalid_amount() {
         let (env, client, payer, p1, p2, token_admin) = setup_test();
         let (token_id, _, _) = create_token(&env, &token_admin);
@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(Contract, 4)")]
+    #[should_panic(expected = "Error(Contract, #4)")]
     fn test_create_expense_no_participants() {
         let (env, client, payer, _, _, token_admin) = setup_test();
         let (token_id, _, _) = create_token(&env, &token_admin);
@@ -328,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(Contract, 2)")]
+    #[should_panic(expected = "Error(Contract, #2)")]
     fn test_split_and_pay_already_paid() {
         let (env, client, payer, p1, p2, token_admin) = setup_test();
         let (token_id, _, asset_client) = create_token(&env, &token_admin);
@@ -359,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "Error(Contract, 7)")]
+    #[should_panic(expected = "Error(Contract, #7)")]
     fn test_cancel_already_cancelled() {
         let (env, client, payer, p1, p2, token_admin) = setup_test();
         let (token_id, _, _) = create_token(&env, &token_admin);

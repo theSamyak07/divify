@@ -30,14 +30,21 @@ interface SplitResult {
   amountXLM: number;
 }
 
-const XLM_PRICE_USD = 0.11; // approximate testnet sim price
+type CurrencyOption = "USD" | "EUR" | "INR" | "XLM";
+
+const CURRENCY_RATES: Record<CurrencyOption, { rate: number; symbol: string }> = {
+  USD: { rate: 0.11, symbol: "$" },
+  EUR: { rate: 0.10, symbol: "€" },
+  INR: { rate: 9.25, symbol: "₹" },
+  XLM: { rate: 1.0, symbol: "XLM " },
+};
 
 export function ExpenseSplitter() {
   const { isConnected } = useWallet();
 
   const [expenseName, setExpenseName] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
-  const [currency, setCurrency] = useState<"XLM" | "USD">("USD");
+  const [currency, setCurrency] = useState<CurrencyOption>("USD");
   const [participants, setParticipants] = useState<Participant[]>([
     { id: "1", name: "", address: "" },
     { id: "2", name: "", address: "" },
@@ -79,12 +86,12 @@ export function ExpenseSplitter() {
     if (!total || total <= 0 || participants.length === 0) return;
 
     const perPerson = total / participants.length;
-    const perPersonXLM =
-      currency === "USD" ? perPerson / XLM_PRICE_USD : perPerson;
+    const rate = CURRENCY_RATES[currency].rate;
+    const perPersonXLM = currency === "XLM" ? perPerson : perPerson / rate;
 
     const results: SplitResult[] = participants.map((p) => ({
       participant: p,
-      amount: perPerson.toFixed(currency === "USD" ? 2 : 7),
+      amount: perPerson.toFixed(currency === "XLM" ? 7 : 2),
       amountXLM: parseFloat(perPersonXLM.toFixed(7)),
     }));
 
@@ -100,7 +107,7 @@ export function ExpenseSplitter() {
     });
   };
 
-  const validParticipants = participants.filter((p) => p.address.trim());
+  const validParticipants = participants.filter((p) => p.address.trim() !== "");
   const canCalculate =
     totalAmount &&
     parseFloat(totalAmount) > 0 &&
@@ -109,11 +116,19 @@ export function ExpenseSplitter() {
   return (
     <>
       <Card className="border-border bg-card">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-foreground text-base">
-            <Split className="h-4 w-4 text-stellar-teal" />
-            Expense Splitter
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-foreground text-lg">
+              <Split className="h-5 w-5 text-stellar-teal" />
+              Multi-Currency Expense Splitter
+            </CardTitle>
+            <Badge
+              variant="outline"
+              className="border-stellar-teal/30 text-stellar-teal bg-stellar-teal/5"
+            >
+              Stellar Testnet
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           {/* Expense details */}
@@ -133,14 +148,14 @@ export function ExpenseSplitter() {
               <Label className="text-foreground text-sm">Total Amount</Label>
               <div className="flex gap-1.5">
                 <div className="flex rounded-lg overflow-hidden border border-border">
-                  {(["USD", "XLM"] as const).map((c) => (
+                  {(["USD", "EUR", "INR", "XLM"] as const).map((c) => (
                     <button
                       key={c}
                       onClick={() => {
                         setCurrency(c);
                         setSplitResults([]);
                       }}
-                      className={`px-3 py-2 text-xs font-semibold transition-colors ${
+                      className={`px-2.5 py-2 text-xs font-semibold transition-colors ${
                         currency === c
                           ? "bg-stellar-teal text-primary-foreground"
                           : "bg-input text-muted-foreground hover:text-foreground"
@@ -152,7 +167,7 @@ export function ExpenseSplitter() {
                 </div>
                 <Input
                   type="number"
-                  placeholder={currency === "USD" ? "0.00" : "0.0000000"}
+                  placeholder={currency === "XLM" ? "0.0000000" : "0.00"}
                   value={totalAmount}
                   onChange={(e) => {
                     setTotalAmount(e.target.value);
@@ -160,14 +175,16 @@ export function ExpenseSplitter() {
                   }}
                   className="bg-input border-border text-foreground flex-1"
                   min="0"
-                  step={currency === "USD" ? "0.01" : "0.0000001"}
+                  step={currency === "XLM" ? "0.0000001" : "0.01"}
                 />
               </div>
-              {currency === "USD" && totalAmount && (
+              {currency !== "XLM" && totalAmount && (
                 <p className="text-xs text-muted-foreground">
                   ≈{" "}
-                  {(parseFloat(totalAmount) / XLM_PRICE_USD).toFixed(2)} XLM
-                  total
+                  {(
+                    parseFloat(totalAmount) / CURRENCY_RATES[currency].rate
+                  ).toFixed(2)}{" "}
+                  XLM total
                 </p>
               )}
             </div>
