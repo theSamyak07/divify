@@ -114,8 +114,8 @@ export function ContractInfo() {
                   {meta.network}
                 </Badge>
                 <span className="text-[11px] text-muted-foreground">
-                  Stellar Asset Contract (SAC)
-                </span>
+                    DivifySplitter v2.0.0 — Soroban
+                  </span>
               </div>
               <Button
                 variant="ghost"

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, X, Wallet, Split, Receipt, BarChart3, Gift } from "lucide-react";
+import { dismissTour } from "@/lib/local-storage";
 
 interface GuidedTourProps {
   onComplete: () => void;
@@ -74,7 +75,7 @@ export function GuidedTour({ onComplete }: GuidedTourProps) {
   };
 
   const handleComplete = () => {
-    localStorage.setItem("divify_tour_dismissed", "true");
+    dismissTour();
     onComplete();
     setVisible(false);
   };
