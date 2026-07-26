@@ -20,7 +20,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Run Vitest unit tests
         run: npm test
@@ -38,7 +38,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm install
 
       - name: Type check
         run: npx tsc --noEmit
@@ -55,24 +55,13 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Cache Rust build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            contracts/divify-splitter/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/divify-splitter/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
-
       - name: Build contract WASM
         working-directory: contracts/divify-splitter
         run: cargo build --target wasm32-unknown-unknown --release
 
       - name: Run contract tests
         working-directory: contracts/divify-splitter
-        run: cargo test --features testutils
+        run: cargo test
 
   # ─── Deploy check ────────────────────────────────────────────────────────
   deploy-check:

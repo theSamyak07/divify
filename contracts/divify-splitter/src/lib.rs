@@ -233,7 +233,7 @@ impl DivifyContract {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::{testutils::{Address as _, MockAuth, MockAuthInvoke}, Env, IntoVal};
+    use soroban_sdk::{testutils::Address as _, Env};
     use soroban_sdk::token::{StellarAssetClient, TokenClient};
 
     fn setup_test() -> (Env, DivifyContractClient<'static>, Address, Address, Address, Address) {
