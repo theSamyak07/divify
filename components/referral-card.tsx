@@ -1,53 +1,60 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useWallet } from "@/lib/wallet-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Check, Gift, Users, Loader2 } from "lucide-react";
-import { generateReferralCode, getReferralsByUser, type ReferralRow } from "@/lib/supabase";
+import { Copy, Check, Gift, Users, Share2 } from "lucide-react";
+import {
+  getWalletReferralCode,
+  getReferrals,
+  type ReferralEntry,
+} from "@/lib/local-storage";
 
 export function ReferralCard() {
-  const { address } = useWallet();
+  const { publicKey } = useWallet();
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referrals, setReferrals] = useState<ReferralRow[]>([]);
+  const [referrals, setReferrals] = useState<ReferralEntry[]>([]);
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  const loadReferralData = useCallback(() => {
+    if (!publicKey) return;
+    const code = getWalletReferralCode(publicKey);
+    setReferralCode(code);
+    setReferrals(getReferrals(code));
+  }, [publicKey]);
 
   useEffect(() => {
-    async function fetchReferralData() {
-      if (!address) return;
+    loadReferralData();
+  }, [loadReferralData]);
 
-      const [codeResult, referralsResult] = await Promise.all([
-        generateReferralCode(address),
-        getReferralsByUser(address),
-      ]);
-
-      if (!codeResult.error) {
-        setReferralCode(codeResult.code);
-      }
-
-      if (!referralsResult.error) {
-        setReferrals(referralsResult.data);
-      }
-
-      setLoading(false);
-    }
-
-    fetchReferralData();
-  }, [address]);
+  const shareLink =
+    typeof window !== "undefined" && referralCode
+      ? `${window.location.origin}/?ref=${referralCode}`
+      : "";
 
   const copyToClipboard = async () => {
-    if (!referralCode) return;
-
-    const shareLink = `${typeof window !== "undefined" ? window.location.origin : ""}/?ref=${referralCode}`;
+    if (!shareLink) return;
     await navigator.clipboard.writeText(shareLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) {
+  const shareNatively = async () => {
+    if (!shareLink) return;
+    if (navigator.share) {
+      await navigator.share({
+        title: "Join Divify — Split expenses on Stellar",
+        text: "I'm using Divify to split group expenses on Stellar Testnet. Join with my referral link:",
+        url: shareLink,
+      });
+    } else {
+      copyToClipboard();
+    }
+  };
+
+  if (!publicKey) {
     return (
       <Card>
         <CardHeader className="pb-2">
@@ -56,15 +63,14 @@ export function ReferralCard() {
             <CardTitle className="text-sm font-medium">Referrals</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="flex items-center justify-center py-4">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        <CardContent>
+          <p className="text-xs text-muted-foreground py-2">
+            Connect your wallet to get a referral code.
+          </p>
         </CardContent>
       </Card>
     );
   }
-
-  const completedCount = referrals.filter((r) => r.status === "completed").length;
-  const pendingCount = referrals.filter((r) => r.status === "pending").length;
 
   return (
     <Card>
@@ -77,7 +83,7 @@ export function ReferralCard() {
           {referrals.length > 0 && (
             <Badge variant="secondary" className="gap-1">
               <Users className="h-3 w-3" />
-              {referrals.length}
+              {referrals.length} referred
             </Badge>
           )}
         </div>
@@ -87,7 +93,7 @@ export function ReferralCard() {
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Your referral code</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm">
+              <code className="flex-1 rounded-md bg-muted px-3 py-2 font-mono text-sm font-bold tracking-wider">
                 {referralCode}
               </code>
               <Button
@@ -95,6 +101,7 @@ export function ReferralCard() {
                 size="icon"
                 onClick={copyToClipboard}
                 className="shrink-0"
+                title="Copy link"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-green-500" />
@@ -102,26 +109,45 @@ export function ReferralCard() {
                   <Copy className="h-4 w-4" />
                 )}
               </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={shareNatively}
+                className="shrink-0"
+                title="Share"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
             </div>
+            <p className="text-[11px] text-muted-foreground break-all">
+              {shareLink}
+            </p>
           </div>
         )}
 
-        {referrals.length > 0 && (
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md bg-muted p-2 text-center">
-              <p className="text-lg font-semibold text-green-500">{completedCount}</p>
-              <p className="text-xs text-muted-foreground">Completed</p>
-            </div>
-            <div className="rounded-md bg-muted p-2 text-center">
-              <p className="text-lg font-semibold text-yellow-500">{pendingCount}</p>
-              <p className="text-xs text-muted-foreground">Pending</p>
+        {referrals.length > 0 ? (
+          <div className="space-y-2">
+            <p className="text-xs font-medium">People you referred</p>
+            <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto">
+              {referrals.map((r, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs text-muted-foreground bg-muted/50 rounded-md px-2 py-1.5"
+                >
+                  <span className="font-mono">
+                    {r.referred_address.slice(0, 6)}…
+                    {r.referred_address.slice(-4)}
+                  </span>
+                  <span className="text-[10px]">
+                    {new Date(r.joined_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-
-        {referrals.length === 0 && (
+        ) : (
           <p className="text-xs text-muted-foreground text-center py-2">
-            Share your code with friends to grow the Divify community.
+            Share your code with friends to grow the Divify community!
           </p>
         )}
       </CardContent>
