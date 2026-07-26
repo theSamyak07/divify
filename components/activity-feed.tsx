@@ -66,6 +66,26 @@ export function ActivityFeed() {
     );
   }
 
+  const exportCSV = () => {
+    if (payments.length === 0) return;
+    const header = "id,type,from,to,amount_xlm,transaction_hash,created_at\n";
+    const rows = payments
+      .map(
+        (p) =>
+          `"${p.id}","${p.type}","${p.from ?? ""}","${p.to ?? ""}","${
+            p.amount ?? ""
+          }","${p.transaction_hash}","${p.created_at}"`
+      )
+      .join("\n");
+    const blob = new Blob([header + rows], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `divify_activity_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Card className="border-border bg-card">
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -73,15 +93,27 @@ export function ActivityFeed() {
           <Clock className="h-4 w-4 text-stellar-teal" />
           Recent Transactions
         </CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          onClick={fetchPayments}
-          disabled={loading}
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-        </Button>
+        <div className="flex items-center gap-1">
+          {payments.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs px-2 gap-1 text-muted-foreground hover:text-foreground"
+              onClick={exportCSV}
+            >
+              Export CSV
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={fetchPayments}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
