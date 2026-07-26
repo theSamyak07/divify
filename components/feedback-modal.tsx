@@ -11,10 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Star, Loader2, CheckCircle } from "lucide-react";
-import { saveUserFeedback } from "@/lib/supabase";
+import { Star, Loader2, CheckCircle, ExternalLink } from "lucide-react";
+import {
+  saveUserFeedback,
+  hasSubmittedFeedback,
+  type UserFeedback,
+} from "@/lib/local-storage";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -32,8 +37,13 @@ const FEATURE_OPTIONS = [
   "Onboarding Flow",
 ];
 
+const GOOGLE_FORM_URL =
+  "https://forms.gle/divify-feedback";
+
 export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
-  const { address } = useWallet();
+  const { publicKey } = useWallet();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [rating, setRating] = useState(0);
   const [easeOfUse, setEaseOfUse] = useState(0);
   const [wouldRecommend, setWouldRecommend] = useState(0);
@@ -43,26 +53,29 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Check if already submitted
+  const alreadySubmitted = publicKey ? hasSubmittedFeedback(publicKey) : false;
+
   const handleSubmit = async () => {
-    if (!address || rating === 0) return;
+    if (!publicKey || rating === 0) return;
 
     setSubmitting(true);
-    const { error } = await saveUserFeedback({
-      wallet_address: address,
-      name: "",
-      email: "",
+
+    // Save to localStorage (instant, no server needed)
+    saveUserFeedback({
+      wallet_address: publicKey,
+      name,
+      email,
       rating,
-      ease_of_use: easeOfUse,
-      would_recommend: wouldRecommend,
+      ease_of_use: easeOfUse || rating,
+      would_recommend: wouldRecommend || rating,
       favorite_feature: favoriteFeature || null,
       improvement_suggestion: suggestion || null,
       experienced_bugs: bugs || null,
-    });
+    } satisfies Omit<UserFeedback, "id" | "created_at">);
 
     setSubmitting(false);
-    if (!error) {
-      setSubmitted(true);
-    }
+    setSubmitted(true);
   };
 
   const handleClose = () => {
@@ -72,11 +85,13 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
     setFavoriteFeature("");
     setSuggestion("");
     setBugs("");
+    setName("");
+    setEmail("");
     setSubmitted(false);
     onClose();
   };
 
-  const StarRating = ({
+  function StarRating({
     value,
     onChange,
     label,
@@ -84,39 +99,61 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
     value: number;
     onChange: (v: number) => void;
     label: string;
-  }) => (
-    <div className="space-y-1">
-      <Label className="text-sm">{label}</Label>
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            type="button"
-            onClick={() => onChange(star)}
-            className="focus:outline-none"
-          >
-            <Star
-              className={`h-6 w-6 transition-colors ${
-                star <= value ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground"
-              }`}
-            />
-          </button>
-        ))}
+  }) {
+    return (
+      <div className="space-y-1">
+        <Label className="text-sm">{label}</Label>
+        <div className="flex gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              onClick={() => onChange(star)}
+              className="focus:outline-none transition-transform hover:scale-110"
+            >
+              <Star
+                className={`h-6 w-6 transition-colors ${
+                  star <= value
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-muted-foreground hover:text-yellow-300"
+                }`}
+              />
+            </button>
+          ))}
+          {value > 0 && (
+            <span className="text-xs text-muted-foreground self-center ml-1">
+              {["", "Poor", "Fair", "Good", "Great", "Excellent"][value]}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (submitted) {
+  if (submitted || alreadySubmitted) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <div className="flex flex-col items-center py-6 text-center">
             <CheckCircle className="h-12 w-12 text-green-500 mb-4" />
             <h3 className="text-lg font-semibold">Thank you for your feedback!</h3>
-            <p className="text-sm text-muted-foreground mt-2">
-              Your input helps us improve Divify for everyone.
+            <p className="text-sm text-muted-foreground mt-2 max-w-xs">
+              Your input helps us improve Divify for everyone on Stellar.
             </p>
-            <Button onClick={handleClose} className="mt-4">
+            <div className="mt-4 rounded-lg bg-muted p-3 text-left w-full">
+              <p className="text-xs text-muted-foreground mb-2">
+                Also fill out our official Google Form to be counted in the Blue Belt submission:
+              </p>
+              <a
+                href={GOOGLE_FORM_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-stellar-teal hover:underline font-medium"
+              >
+                Open Google Form <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <Button onClick={handleClose} className="mt-4 bg-stellar-teal hover:bg-stellar-teal/90">
               Close
             </Button>
           </div>
@@ -127,38 +164,60 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Share Your Feedback</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Share Your Feedback
+            <Badge variant="outline" className="text-[10px]">Level 5</Badge>
+          </DialogTitle>
           <DialogDescription>
-            Help us improve Divify by sharing your experience.
+            Help us improve Divify by sharing your experience. Takes under a minute.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        {!publicKey && (
+          <div className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+            Connect your wallet first to submit feedback tied to your address.
+          </div>
+        )}
+
+        <div className="space-y-4 py-2">
+          {/* Name + email for identification */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Name</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Email</Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+              />
+            </div>
+          </div>
+
           <StarRating value={rating} onChange={setRating} label="Overall Rating *" />
-
-          <StarRating
-            value={easeOfUse}
-            onChange={setEaseOfUse}
-            label="Ease of Use"
-          />
-
-          <StarRating
-            value={wouldRecommend}
-            onChange={setWouldRecommend}
-            label="Would Recommend"
-          />
+          <StarRating value={easeOfUse} onChange={setEaseOfUse} label="Ease of Use" />
+          <StarRating value={wouldRecommend} onChange={setWouldRecommend} label="Would Recommend" />
 
           <div className="space-y-2">
             <Label className="text-sm">Favorite Feature</Label>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {FEATURE_OPTIONS.map((feature) => (
                 <Badge
                   key={feature}
                   variant={favoriteFeature === feature ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => setFavoriteFeature(feature)}
+                  className="cursor-pointer transition-colors hover:bg-accent"
+                  onClick={() =>
+                    setFavoriteFeature(favoriteFeature === feature ? "" : feature)
+                  }
                 >
                   {feature}
                 </Badge>
@@ -166,7 +225,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label className="text-sm">Improvement Suggestions</Label>
             <Textarea
               value={suggestion}
@@ -176,7 +235,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label className="text-sm">Bugs or Issues</Label>
             <Textarea
               value={bugs}
@@ -185,19 +244,42 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
               rows={2}
             />
           </div>
+
+          {publicKey && (
+            <p className="text-[11px] text-muted-foreground">
+              Submitting as{" "}
+              <span className="font-mono">
+                {publicKey.slice(0, 6)}…{publicKey.slice(-4)}
+              </span>
+            </p>
+          )}
         </div>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={rating === 0 || submitting}
-            className="bg-stellar-teal hover:bg-stellar-teal/90"
+        <div className="flex justify-between items-center gap-2">
+          <a
+            href={GOOGLE_FORM_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-stellar-teal transition-colors"
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit"}
-          </Button>
+            Google Form <ExternalLink className="h-3 w-3" />
+          </a>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={!publicKey || rating === 0 || submitting}
+              className="bg-stellar-teal hover:bg-stellar-teal/90"
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Submit Feedback"
+              )}
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
