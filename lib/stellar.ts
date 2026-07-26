@@ -106,8 +106,10 @@ export interface PaymentRecord {
   type: string;
   created_at: string;
   transaction_hash: string;
+  transaction_successful?: boolean;
   amount?: string;
   asset_type?: string;
+  asset_code?: string;
   from?: string;
   to?: string;
 }

@@ -83,13 +83,13 @@ describe("generateReferralCode", () => {
 // ---------------------------------------------------------------------------
 
 describe("shortenAddress", () => {
-  const testAddr = "GABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVWX";
+  const testAddr = "GBR72X24N53QZOP3E65W42XG5XF6JYYR7P37X5Q7425Z64D23B6H4V3Q";
 
   it("returns first and last 6 chars by default with ellipsis", () => {
     const short = shortenAddress(testAddr);
     expect(short).toContain("...");
-    expect(short.startsWith("GABCDE")).toBe(true);
-    expect(short.endsWith("UVWX")).toBe(false); // Last 6
+    expect(short.startsWith("GBR72X")).toBe(true);
+    expect(short.endsWith("6H4V3Q")).toBe(true);
   });
 
   it("returns empty string for empty input", () => {
@@ -109,7 +109,7 @@ describe("shortenAddress", () => {
 
 describe("isValidStellarAddress", () => {
   it("accepts valid Stellar testnet address format", () => {
-    const valid = "GABCDEFGHIJKLMNOPQRSTUVWXYZ234567ABCDEFGHIJKLMNOPQRSTUVWX";
+    const valid = "GBR72X24N53QZOP3E65W42XG5XF6JYYR7P37X5Q7425Z64D23B6H4V3Q";
     // Our simple regex check
     expect(valid.startsWith("G")).toBe(true);
     expect(valid.length).toBe(56);
