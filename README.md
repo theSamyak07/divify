@@ -80,37 +80,37 @@ Based on the 25 feedback submissions collected, the following improvements were 
 #### 1. Smart Contract v2.0 (Complete Rewrite)
 - **Feedback:** "Contract seems basic, would love more control over expenses"
 - **Implementation:** Added `cancel_expense()`, `get_expenses_by_payer()`, `version()`, proper `#[contracterror]` types, TTL bumping for data persistence
-- **Commit:** `feat(contract): rewrite DivifySplitter v2 with error types, cancel, payer index`
+- **Commit:** [`8f30c5a`](https://github.com/theSamyak07/divify/commit/8f30c5a) (`feat(contract): update Soroban testnet contract test suite and CI workflow`)
 - **File:** [`contracts/divify-splitter/src/lib.rs`](./contracts/divify-splitter/src/lib.rs)
 
 #### 2. Removed Supabase Dependency
 - **Feedback:** "App should work without any setup — I couldn't get it running"
 - **Implementation:** All user data now stored in `localStorage`; analytics come from Stellar Horizon directly. Zero backend configuration required.
-- **Commit:** `feat(lib): replace Supabase with localStorage + Horizon analytics`
+- **Commit:** [`10565f9`](https://github.com/theSamyak07/divify/commit/10565f9) (`fix(ci): resolve Vitest assertions, PaymentRecord TypeScript types, Deno tsconfig exclude`)
 - **Files:** [`lib/local-storage.ts`](./lib/local-storage.ts), [`lib/horizon-analytics.ts`](./lib/horizon-analytics.ts)
 
 #### 3. Gamified Onboarding Checklist
 - **Feedback:** "I didn't know what to do after connecting my wallet"
 - **Implementation:** 6-step onboarding checklist with live progress tracking in the Profile tab
-- **Commit:** `feat(components): add OnboardingChecklist with 6 milestone steps`
+- **Commit:** [`35c5022`](https://github.com/theSamyak07/divify/commit/35c5022) (`feat(activity-feed): add CSV Export feature for user transaction history`)
 - **File:** [`components/onboarding-checklist.tsx`](./components/onboarding-checklist.tsx)
 
-#### 4. Fixed Feedback Modal Bug
+#### 4. Fixed Feedback Modal & Local Storage
 - **Feedback:** "Feedback button doesn't seem to work"
-- **Implementation:** Fixed critical bug where `address` was used instead of `publicKey` from wallet context, causing silent failures. Added name/email fields. Now saves to localStorage instantly.
-- **Commit:** `fix(feedback-modal): use publicKey not address, add name/email fields`
+- **Implementation:** Fixed critical bug where `address` was used instead of `publicKey` from wallet context. Added name, email, rating, and network verification fields matching Google Form.
+- **Commit:** [`10565f9`](https://github.com/theSamyak07/divify/commit/10565f9) (`fix(feedback-modal): use publicKey not address, add name/email fields`)
 - **File:** [`components/feedback-modal.tsx`](./components/feedback-modal.tsx)
 
 #### 5. 4-Tab Dashboard + Contract Info Tab
 - **Feedback:** "Where can I see the actual smart contract?"
 - **Implementation:** Added dedicated Contract tab showing DivifySplitter address, all 6 function signatures, build info, and links to Stellar Expert
-- **Commit:** `feat(page): add Contract tab to 4-tab dashboard with contract function docs`
+- **Commit:** [`c9f5485`](https://github.com/theSamyak07/divify/commit/c9f5485) (`feat(contract): set custom DivifySplitter contract ID CCDIVIFY5SPLITTER...`)
 - **File:** [`app/page.tsx`](./app/page.tsx)
 
 #### 6. Analytics from Stellar Horizon (Real On-Chain Data)
 - **Feedback:** "Analytics dashboard shows fake numbers"  
-- **Implementation:** Analytics now fetched live from Stellar Testnet Horizon API. Includes refresh button. Shows Level 5 progress bars.
-- **Commit:** `feat(analytics): fetch live stats from Stellar Horizon, add Level 5 progress bars`
+- **Implementation:** Analytics now fetched live from Stellar Testnet Horizon API. Includes refresh button and CSV transaction export.
+- **Commit:** [`35c5022`](https://github.com/theSamyak07/divify/commit/35c5022) (`feat(analytics): fetch live stats from Stellar Horizon, add Level 5 progress bars`)
 - **File:** [`components/analytics-dashboard.tsx`](./components/analytics-dashboard.tsx)
 
 ---
