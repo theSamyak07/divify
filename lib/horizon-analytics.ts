@@ -9,7 +9,7 @@ import { STELLAR_HORIZON_URL } from "./stellar";
 
 // The deployed DivifySplitter contract address on Stellar Testnet
 export const DIVIFY_CONTRACT_ADDRESS =
-  "CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD";
+  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
 // ---------------------------------------------------------------------------
 // Types

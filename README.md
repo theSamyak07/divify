@@ -35,9 +35,9 @@ Divify is a production-ready, non-custodial expense splitting dApp built on the 
 
 ### Smart Contract Interactions & User Activity Proof
 
-Over **50+ testnet wallet accounts** have actively interacted with our deployed **DivifySplitter** smart contract (`CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD`). These users executed contract functions (`create_expense` and `split_and_pay`), recording expense splits directly on the Stellar Testnet ledger.
+Over **50+ testnet wallet accounts** have actively interacted with our deployed **DivifySplitter** smart contract (`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`). These users executed contract functions (`create_expense` and `split_and_pay`), recording expense splits directly on the Stellar Testnet ledger.
 
-**→ [View On-Chain Smart Contract Activity (CSV)](./docs/user_wallets.csv)** — 55 wallet transactions referencing contract `CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD`, verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD).
+**→ [View On-Chain Smart Contract Activity (CSV)](./docs/user_wallets.csv)** — 55 wallet transactions referencing contract `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`, verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC).
 
 ---
 
@@ -177,9 +177,9 @@ Based on the 25 feedback submissions collected, the following improvements were 
 
 **Contract Address (Testnet):**
 ```
-CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD
+CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
-[→ View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD)
+[→ View on Stellar Expert](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC)
 
 ### Contract Functions
 

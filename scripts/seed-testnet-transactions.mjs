@@ -45,7 +45,7 @@ const NETWORK_PASSPHRASE = Networks.TESTNET;
 
 /** The DivifySplitter contract address (used as the "app" destination for splits) */
 const DIVIFY_CENTRAL_WALLET =
-  "CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD";
+  "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
 
 const NUM_USERS = 55; // Create 55 users (exceeds the 50 minimum)
 const SPLIT_AMOUNT_XLM = "5"; // Each simulated user sends 5 XLM

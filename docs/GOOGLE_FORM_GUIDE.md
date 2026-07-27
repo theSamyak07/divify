@@ -41,4 +41,4 @@ This guide details how the **Platform User Feedback and Verification** Google Fo
 
 ## 🔗 Verification against On-Chain Activity
 
-Every submission includes the user's **Stellar Wallet Address (Public Key)**. Evaluators can cross-reference the submitted public keys with the on-chain contract transactions documented in [`docs/user_wallets.csv`](./user_wallets.csv) and verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CCDIVIFY5SPLITTER2SOROBAN3STELLAR4TESTNET5CONTRACT6ID7890ABCD).
+Every submission includes the user's **Stellar Wallet Address (Public Key)**. Evaluators can cross-reference the submitted public keys with the on-chain contract transactions documented in [`docs/user_wallets.csv`](./user_wallets.csv) and verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC).
