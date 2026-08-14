@@ -18,6 +18,10 @@ import {
   Split,
 } from "lucide-react";
 
+import { AddressBookModal } from "@/components/address-book-modal";
+import type { SavedContact } from "@/lib/contacts";
+import { BookUser } from "lucide-react";
+
 interface Participant {
   id: string;
   name: string;
@@ -45,6 +49,8 @@ export function ExpenseSplitter() {
   const [expenseName, setExpenseName] = useState("");
   const [totalAmount, setTotalAmount] = useState("");
   const [currency, setCurrency] = useState<CurrencyOption>("USD");
+  const [addressBookOpen, setAddressBookOpen] = useState(false);
+  const [activeParticipantId, setActiveParticipantId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([
     { id: "1", name: "", address: "" },
     { id: "2", name: "", address: "" },
@@ -205,15 +211,26 @@ export function ExpenseSplitter() {
                   {participants.length}
                 </Badge>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={addParticipant}
-                className="h-7 text-xs gap-1.5 text-stellar-teal hover:text-stellar-teal hover:bg-stellar-teal/10"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add Person
-              </Button>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAddressBookOpen(true)}
+                  className="h-7 text-xs gap-1 border-border text-foreground hover:bg-muted"
+                >
+                  <BookUser className="h-3.5 w-3.5 text-stellar-teal" />
+                  Address Book
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={addParticipant}
+                  className="h-7 text-xs gap-1.5 text-stellar-teal hover:text-stellar-teal hover:bg-stellar-teal/10"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add Person
+                </Button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -366,6 +383,17 @@ export function ExpenseSplitter() {
         prefillDestination={sendModal.destination}
         prefillAmount={sendModal.amount}
         prefillMemo={sendModal.memo}
+      />
+
+      <AddressBookModal
+        isOpen={addressBookOpen}
+        onClose={() => setAddressBookOpen(false)}
+        onSelectContact={(contact: SavedContact) => {
+          setParticipants((prev) => [
+            ...prev,
+            { id: Date.now().toString(), name: contact.name, address: contact.publicKey },
+          ]);
+        }}
       />
     </>
   );

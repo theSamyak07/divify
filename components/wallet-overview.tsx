@@ -9,6 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet, Copy, ExternalLink, ArrowUpRight, RefreshCw, Loader as Loader2, Droplets } from "lucide-react";
 import { useState } from "react";
 
+import { QrCodeModal } from "@/components/qr-code-modal";
+import { QrCode } from "lucide-react";
+
 interface WalletOverviewProps {
   onSendClick: () => void;
 }
@@ -25,6 +28,7 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
   } = useWallet();
 
   const [copied, setCopied] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [funding, setFunding] = useState(false);
   const [fundMsg, setFundMsg] = useState<string | null>(null);
@@ -134,6 +138,15 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
               title="Copy address"
             >
               <Copy className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => setQrOpen(true)}
+              title="Show QR Code"
+            >
+              <QrCode className="h-3.5 w-3.5 text-stellar-teal" />
             </Button>
             <Button
               variant="ghost"
@@ -260,6 +273,12 @@ export function WalletOverview({ onSendClick }: WalletOverviewProps) {
           </a>
         </div>
       </CardContent>
+
+      <QrCodeModal
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        publicKey={publicKey || ""}
+      />
     </Card>
   );
 }

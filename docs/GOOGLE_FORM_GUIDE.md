@@ -1,44 +1,45 @@
-# Platform User Feedback & Verification — Google Form Setup Guide
+# Platform User Feedback & Verification — Google Form Guide
 
-This guide details how the **Platform User Feedback and Verification** Google Form is configured to collect and verify community feedback and Stellar wallet interaction records for the Divify dApp.
+This document describes how the **Platform User Feedback and Verification** Google Form was set up to collect user feedback and verify Stellar wallet interactions for the Divify platform.
 
-**Live Form Link:** [https://forms.gle/kneRcE3eTa5oisiz5](https://forms.gle/kneRcE3eTa5oisiz5)
+## Live Form
 
----
+**Link:** [https://forms.gle/kneRcE3eTa5oisiz5](https://forms.gle/kneRcE3eTa5oisiz5)
 
-## 📋 Google Form Structure
+## Form Fields
 
-### Form Title
-`Platform User Feedback and Verification`
+The form collects the following information from each user:
 
-### Form Description
-`Thank you for participating. Please complete this form to verify your identity and share your experience with our platform.`
+| # | Field | Type | Required |
+|---|---|---|---|
+| 1 | Full Name | Short answer (text) | Yes |
+| 2 | Email Address | Short answer (email validation) | Yes |
+| 3 | Stellar Wallet Address (Public Key) | Short answer (starts with `G`, 56 characters) | Yes |
+| 4 | Network | Multiple choice: Testnet / Public Mainnet | Yes |
+| 5 | Rate the Platform (UI/UX & Lessons) | Linear scale 1–5 (Poor to Excellent) | Yes |
+| 6 | What is one thing we could improve in the next phase? | Paragraph (long text) | No |
 
----
+## Exporting Responses
 
-## 📝 Form Fields Specification
+1. Open the form at [https://forms.gle/kneRcE3eTa5oisiz5](https://forms.gle/kneRcE3eTa5oisiz5)
+2. Click the **Responses** tab
+3. Click the **Link to Sheets** icon to open responses in Google Sheets
+4. In Google Sheets, go to `File` → `Download` → `Comma Separated Values (.csv)`
+5. Save as [`docs/user_feedback_export.csv`](./user_feedback_export.csv)
 
-| # | Question Label | Question Type | Options / Config | Required |
-|---|---|---|---|---|
-| 1 | **Full Name** | Short answer | Text input | Yes |
-| 2 | **Email Address** | Short answer | Email validation | Yes |
-| 3 | **Stellar Wallet Address (Public Key)** | Short answer | Text input (starts with `G`, 56 chars) | Yes |
-| 4 | **Network** | Multiple choice | • Public Mainnet<br>• Testnet | Yes |
-| 5 | **Rate the Platform (UI/UX & Lessons)** | Linear scale (1 to 5) | 1 = Poor<br>5 = Excellent | Yes |
-| 6 | **What is one thing we could improve in the next phase?** | Paragraph | Long text | No |
+## Exported Data
 
----
+The exported CSV is available at [`docs/user_feedback_export.csv`](./user_feedback_export.csv) and contains 30 verified feedback entries.
 
-## 📊 Exporting & Verifying Submissions
+The CSV columns match the Google Form field names exactly:
+- `Timestamp`
+- `Full Name`
+- `Email Address`
+- `Stellar Wallet Address (Public Key)`
+- `Network`
+- `Rate the Platform (UI/UX & Lessons)`
+- `What is one thing we could improve in the next phase?`
 
-1. Go to your Google Form at [https://forms.gle/kneRcE3eTa5oisiz5](https://forms.gle/kneRcE3eTa5oisiz5).
-2. Click on the **Responses** tab at the top.
-3. Click the **"Link to Sheets"** icon to open live responses in Google Sheets.
-4. Go to `File` → `Download` → `Comma Separated Values (.csv)` to save the exported data.
-5. Save the exported CSV file as [`docs/user_feedback_export.csv`](./user_feedback_export.csv).
+## Verification
 
----
-
-## 🔗 Verification against On-Chain Activity
-
-Every submission includes the user's **Stellar Wallet Address (Public Key)**. Evaluators can cross-reference the submitted public keys with the on-chain contract transactions documented in [`docs/user_wallets.csv`](./user_wallets.csv) and verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC).
+Each feedback submission includes a Stellar Wallet Address. These public keys can be cross-referenced with the on-chain transaction records in [`docs/user_wallets.csv`](./user_wallets.csv), which are verifiable on [Stellar Expert Explorer](https://stellar.expert/explorer/testnet/contract/CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC).
