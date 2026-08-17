@@ -15,6 +15,7 @@ import { GuidedTour } from "@/components/guided-tour";
 import { OnboardingModal } from "@/components/onboarding-modal";
 import { ReferralCard } from "@/components/referral-card";
 import { OnboardingChecklist } from "@/components/onboarding-checklist";
+import { CurrencyConverterWidget } from "@/components/currency-converter-widget";
 import { useWallet } from "@/lib/wallet-context";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -327,7 +328,14 @@ function Dashboard({
 
         {/* Analytics tab */}
         <TabsContent value="analytics" className="mt-5">
-          <AnalyticsDashboard />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="lg:col-span-2">
+              <AnalyticsDashboard />
+            </div>
+            <div>
+              <CurrencyConverterWidget />
+            </div>
+          </div>
         </TabsContent>
 
         {/* Profile tab */}
