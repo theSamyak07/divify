@@ -342,17 +342,12 @@ cargo install stellar-cli --locked
 - [ ] Web push notifications via service worker
 - [ ] Mobile app (React Native / Expo)
 
-### Phase 7 — Brown Belt
+### Phase 7 — Black Belt
 - [ ] DAO governance for feature voting
 - [ ] Cross-chain bridges (Ethereum, Solana via Starbridge)
 - [ ] Receipt OCR scanning for automatic bill splitting
 - [ ] Enterprise team management & multi-sig expenses
 
-### Phase 8 — Black Belt
-- [ ] Fiat on/off ramps via Stellar anchors
-- [ ] Advanced ML analytics (spending patterns, smart suggestions)
-- [ ] Global localization (10+ languages)
-- [ ] Institutional-grade audit & formal verification
 
 ---
 
