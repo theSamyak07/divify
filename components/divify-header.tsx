@@ -24,6 +24,7 @@ import {
   Menu,
 } from "lucide-react";
 import { useState } from "react";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface DivifyHeaderProps {
   onConnectClick?: () => void;
@@ -107,6 +108,7 @@ export function DivifyHeader({ onConnectClick }: DivifyHeaderProps = {}) {
 
       {/* Wallet controls */}
       <div className="flex items-center gap-2">
+        {isConnected && <NotificationBell />}
         {!isConnected ? (
           <Button
             onClick={onConnectClick}
