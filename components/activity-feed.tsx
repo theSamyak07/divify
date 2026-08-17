@@ -13,10 +13,43 @@ import {
   Clock,
   ExternalLink,
   RefreshCw,
+  Copy,
+  CheckCheck,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import type { PaymentRecord } from "@/lib/stellar";
+
+// ---------------------------------------------------------------------------
+// CopyHashButton — copy TX hash to clipboard with visual feedback
+// Addresses user feedback #33: "Add copy-to-clipboard buttons for hashes"
+// ---------------------------------------------------------------------------
+function CopyHashButton({ hash }: { hash: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    if (typeof navigator !== "undefined") {
+      navigator.clipboard.writeText(hash).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    }
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      className="btn-icon-sm text-muted-foreground hover:text-stellar-teal transition-colors opacity-0 group-hover:opacity-100"
+      title="Copy TX hash"
+      id={`copy-hash-${hash.slice(0, 8)}`}
+    >
+      {copied ? (
+        <CheckCheck className="h-2.5 w-2.5 text-stellar-teal" />
+      ) : (
+        <Copy className="h-2.5 w-2.5" />
+      )}
+    </button>
+  );
+}
+
 
 export function ActivityFeed() {
   const { isConnected, publicKey } = useWallet();
@@ -100,6 +133,7 @@ export function ActivityFeed() {
               size="sm"
               className="h-7 text-xs px-2 gap-1 text-muted-foreground hover:text-foreground"
               onClick={exportCSV}
+              id="activity-export-csv-btn"
             >
               Export CSV
             </Button>
@@ -196,14 +230,17 @@ export function ActivityFeed() {
                     <p className="text-[10px] text-muted-foreground">
                       {formatDate(op.created_at)}
                     </p>
-                    <a
-                      href={`https://stellar.expert/explorer/testnet/tx/${op.transaction_hash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-0.5 text-[10px] text-stellar-teal opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      View <ExternalLink className="h-2.5 w-2.5" />
-                    </a>
+                    <div className="flex items-center gap-1 justify-end">
+                      <a
+                        href={`https://stellar.expert/explorer/testnet/tx/${op.transaction_hash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-0.5 text-[10px] text-stellar-teal opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        View <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                      <CopyHashButton hash={op.transaction_hash} />
+                    </div>
                   </div>
                 </div>
               );
